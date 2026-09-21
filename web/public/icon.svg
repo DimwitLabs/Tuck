@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#1c2835"/>
+  <g transform="translate(6.4 6.4) scale(0.8)">
+    <rect x="11" y="6" width="42" height="22" rx="7" fill="#3b4958"/>
+    <g transform="translate(0 -1) rotate(-10 32 28) translate(32 28) scale(0.9) translate(-32 -28)">
+      <path d="M16 38V25L22 16.5L28 22H36L42 16.5L48 25V38Z" fill="#eef2f6" stroke="#eef2f6" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M22.5 28Q25.5 30.8 28.5 28M35.5 28Q38.5 30.8 41.5 28" fill="none" stroke="#10161e" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+    <path d="M13 35Q32 29.2 51 35V58Q51 62 47 62H17Q13 62 13 58Z" fill="#6d9ee0"/>
+    <path d="M13 35Q32 29.2 51 35V41.5Q32 35.7 13 41.5Z" fill="#8fb5dc"/>
+    <ellipse cx="24.5" cy="34" rx="3.8" ry="2.6" fill="#eef2f6"/>
+    <ellipse cx="39.5" cy="33.4" rx="3.8" ry="2.6" fill="#eef2f6"/>
+    <g transform="translate(0 -1) rotate(-10 32 28) translate(32 28) scale(0.9) translate(-32 -28)">
+      <path d="M17 31L8.5 29.5M17 34L8.5 35M47 31L55.5 29.5M47 34L55.5 35" fill="none" stroke="#eef2f6" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>
