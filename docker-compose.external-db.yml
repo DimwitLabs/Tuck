@@ -1,0 +1,24 @@
+services:
+  tuck:
+    image: ghcr.io/dimwitlabs/tuck:${TUCK_VERSION:-latest}
+    build: .
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "${TUCK_BIND:-127.0.0.1}:${TUCK_PORT:-8080}:8080"
+    environment:
+      TUCK_DATABASE_URL: ${TUCK_DATABASE_URL:?set TUCK_DATABASE_URL, see .env.example}
+      TUCK_DB_SCHEMA: ${TUCK_DB_SCHEMA:-tuck}
+      TUCK_FEATURES: ${TUCK_FEATURES:-both}
+      TUCK_TRUSTED_PROXIES: ${TUCK_TRUSTED_PROXIES:-}
+      TUCK_SECURE_COOKIES: ${TUCK_SECURE_COOKIES:-true}
+      TUCK_SESSION_HOURS: ${TUCK_SESSION_HOURS:-12}
+      TUCK_MAX_FILE_MB: ${TUCK_MAX_FILE_MB:-25}
+      TUCK_FREEZE_AFTER: ${TUCK_FREEZE_AFTER:-6}
+      TUCK_GATE_PASSWORD: ${TUCK_GATE_PASSWORD:-}
+      TUCK_GATE_WORD: ${TUCK_GATE_WORD:-}
+      TUCK_MAX_ITEMS: ${TUCK_MAX_ITEMS:-5000}
+      TUCK_MAX_STORAGE_MB: ${TUCK_MAX_STORAGE_MB:-1024}
+      TUCK_DB_ALLOW_PLAINTEXT: ${TUCK_DB_ALLOW_PLAINTEXT:-false}
