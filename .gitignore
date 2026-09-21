@@ -1,0 +1,7 @@
+.DS_Store
+.env
+/tuck
+web/node_modules/
+web/dist/*
+!web/dist/.gitkeep
+.claude/
