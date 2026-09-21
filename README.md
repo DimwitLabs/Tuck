@@ -1,5 +1,12 @@
 # Tuck
 
+[![CI](https://github.com/DimwitLabs/Tuck/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DimwitLabs/Tuck/actions/workflows/ci.yml?query=branch%3Amain)
+[![AI-DECLARATION: copilot](https://img.shields.io/badge/䷼%20AI--DECLARATION-copilot-fee2e2?labelColor=fee2e2)](https://ai-declaration.md)
+[![Dimwit Pledge](https://dimwit.me/pledge.svg)](https://dimwit.me/pledge)
+
+> [!NOTE]
+> This project is backed by the [Dimwit Pledge](https://dimwit.me/pledge).
+
 A self-hosted vault for SSH keys, hosts and files. One download sets up `~/.ssh` on any machine.
 
 Everything is encrypted in your browser before it's saved. The server only ever holds ciphertext: it never sees your password, your answers or your keys.
