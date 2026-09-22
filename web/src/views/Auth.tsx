@@ -37,7 +37,7 @@ export function Auth({ signupOpen, initialUsername, notice, onLogin, onSignup }:
   return (
     <main className="auth">
       <div className="auth-sheet">
-        <Brand line="keys, hosts and files, tucked away where only you can open them." />
+        <Brand line="all your secrets, tucked in." />
         {signupOpen && (
           <nav className="tabs" aria-label="log in or sign up">
             <button type="button" className={`act ${mode === "login" ? "here" : ""}`} onClick={() => setMode("login")}>

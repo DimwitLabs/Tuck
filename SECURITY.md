@@ -14,10 +14,10 @@ Your password and your three answers form a chain. Each link is derived from the
 |---|---|---|
 | Root key | Argon2id of your password (64 MiB, 3 passes) | Nothing |
 | Login proof | Derived from the root key | Its SHA-256 |
-| Question *i* | Encrypted with a key from the previous link | The ciphertext |
-| Link *i* | Argon2id of the previous link plus answer *i* | Nothing |
-| Answer proof *i* | Derived from link *i* | Its SHA-256 |
-| Vault key | Random, wrapped with a key from the last link | The wrapped key |
+| Each question | Encrypted with the key before it: the root key for question 1, then answer 1's key, then answer 2's | The ciphertext |
+| Each answer's key | Argon2id of the key before it plus your answer | Nothing |
+| Each answer's proof | Derived from that answer's key | Its SHA-256 |
+| Vault key | Random, wrapped with answer 3's key | The wrapped key |
 | Each item | AES-256-GCM with the vault key, bound to its id, kind and version | The ciphertext |
 
 The server hands out the next question only after checking the previous answer's proof, and hands over the wrapped vault key only after the third.
