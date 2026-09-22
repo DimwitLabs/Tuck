@@ -28,8 +28,8 @@ Put Tuck behind an HTTPS reverse proxy, set `TUCK_TRUSTED_PROXIES`, then sign up
 
 ## Worth knowing
 
-- **There's no recovery.** Forget the password or an answer and the vault is gone. Keep an export somewhere safe.
-- **Run it yourself.** Whoever runs the server could change the page and capture what you type. [SECURITY.md](SECURITY.md) and the [threat model](https://docs.tuck.dimwit.me/reference/threat-model) cover the rest.
+- **There's no recovery:** Forget the password or an answer and the vault is gone. Keep an export somewhere safe.
+- **Run it yourself:** Whoever runs the server could change the page and capture what you type. [SECURITY.md](SECURITY.md) and the [threat model](https://docs.tuck.dimwit.me/reference/threat-model) cover the rest.
 
 ## Development
 

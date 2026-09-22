@@ -30,5 +30,6 @@ jobs:
               git clone https://github.com/DimwitLabs/Tuck.git /var/www/tuck
             fi
             cd /var/www/tuck
-            git pull --ff-only
+            git fetch --quiet origin main
+            git reset --hard origin/main
             git log -1 --oneline

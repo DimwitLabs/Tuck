@@ -21,8 +21,8 @@ get too many answers wrong and unlocking pauses, then freezes.
 
 ## good to know
 
-- **there's no recovery.** forget an answer and the vault is gone. keep an export somewhere safe.
-- **run it yourself.** whoever runs the server could tamper with the page it sends you.
+- **there's no recovery:** forget an answer and the vault is gone. keep an export somewhere safe.
+- **run it yourself:** whoever runs the server could tamper with the page it sends you.
 
 ## where to next
 

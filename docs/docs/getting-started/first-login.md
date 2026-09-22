@@ -15,7 +15,7 @@ each tuck has one account, and sign-up closes after it. do it before you share t
 
 ## picking good answers
 
-- **make them unguessable.** nothing from social media or a public record.
+- **make them unguessable:** nothing from social media or a public record.
 - case and extra spaces don't matter. spelling and punctuation do.
 - write them down somewhere safe. there's no recovery.
 
