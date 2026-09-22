@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 576">
+  <style>
+  .sun { fill: #f2c27a; opacity: 0.5; }
+  .sun.halo { opacity: 0.16; }
+  .cloud { fill: #fbfcfd; opacity: 0.85; }
+  .bird { fill: none; stroke: #5a6776; stroke-width: 1.4; stroke-linecap: round; opacity: 0.45; }
+  .cloud { animation: drift 90s ease-in-out infinite alternate; }
+  .cloud.slow { animation-duration: 140s; animation-direction: alternate-reverse; }
+  .star.twinkle { animation: twinkle 4s ease-in-out infinite; }
+  .star.twinkle:nth-child(3n) { animation-delay: -1.3s; animation-duration: 5.5s; }
+  .star.twinkle:nth-child(3n + 1) { animation-delay: -2.6s; animation-duration: 3.2s; }
+  @keyframes drift { to { transform: translateX(-70px); } }
+  @keyframes twinkle { 50% { opacity: 0.2; } }
+  @media (prefers-reduced-motion: reduce) { .cloud, .star.twinkle { animation: none; } }
+  </style>
+  <defs><radialGradient id="glow" cx="0.86" cy="0" r="0.6"><stop offset="0" stop-color="rgb(244,190,110)" stop-opacity="0.38"/><stop offset="1" stop-color="rgb(244,190,110)" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1440" height="576" fill="url(#glow)"/>
+  <g>
+        <circle class="sun halo" cx="1236" cy="74" r="92"/>
+        <circle class="sun" cx="1236" cy="74" r="42"/>
+        <g class="cloud"><ellipse cx="1010" cy="150" rx="58" ry="15"/><ellipse cx="1040" cy="138" rx="34" ry="17"/><ellipse cx="985" cy="142" rx="24" ry="12"/></g>
+        <g class="cloud slow"><ellipse cx="250" cy="86" rx="70" ry="16"/><ellipse cx="282" cy="72" rx="40" ry="19"/><ellipse cx="222" cy="78" rx="28" ry="13"/></g>
+        <path class="bird" d="M1098 206q7 -7 14 0q7 -7 14 0"/>
+        <path class="bird" d="M1134 224q5 -5 10 0q5 -5 10 0"/>
+  </g>
+</svg>

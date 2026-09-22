@@ -5,3 +5,6 @@ web/node_modules/
 web/dist/*
 !web/dist/.gitkeep
 .claude/
+docs/node_modules/
+docs/build/
+docs/.docusaurus/
