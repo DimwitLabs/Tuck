@@ -90,8 +90,9 @@ export async function loadItems(vault: Vault): Promise<Loaded> {
     if (others.length > 0) {
       throw new Error("the vault's index is missing, so tuck can't tell whether anything in it is current. nothing was opened.");
     }
-    const problems = lastSeen() > 0 ? ["the server says this vault is empty, but this browser has seen things in it before."] : [];
-    forget();
+    const problems = lastSeen() > 0
+      ? ["the server says this vault is empty, but this browser has seen things in it before. saving something new clears this warning."]
+      : [];
     return { items: [], state: { manifest: { counter: 0, items: {} }, hash: "" }, problems };
   }
 
@@ -139,6 +140,7 @@ export function useVaultData(vault: Vault, loaded: Loaded): VaultData {
         try {
           await api.putItem(MANIFEST_ID, "manifest", sealed.nonce, sealed.ciphertext, current.hash);
           state.current = { manifest: next, hash: await sha256(fromBase64(sealed.ciphertext)) };
+          if (current.hash === "") forget();
           remember(next.counter);
           return;
         } catch (err) {

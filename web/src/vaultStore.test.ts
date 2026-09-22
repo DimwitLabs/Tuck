@@ -66,6 +66,14 @@ describe("loading a versioned vault", () => {
     expect((await loadItems(vault)).problems.join(" ")).toMatch(/older copy of the whole vault/);
   });
 
+  it("keeps warning about a vault that came back empty until something new is saved", async () => {
+    stored = [await manifest({ counter: 9, items: {} })];
+    await loadItems(vault);
+    stored = [];
+    expect((await loadItems(vault)).problems.join(" ")).toMatch(/seen things in it before/);
+    expect((await loadItems(vault)).problems.join(" ")).toMatch(/seen things in it before/);
+  });
+
   it("refuses to open items with no manifest to vouch for them", async () => {
     stored = [await host(A, 1, "unvouched")];
     await expect(loadItems(vault)).rejects.toThrow(/index is missing/);
