@@ -1,0 +1,34 @@
+name: Landing
+
+on:
+  push:
+    branches: [main]
+    paths: [landing/**, .github/workflows/landing.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: landing
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull on the Server
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_KEY }}
+          script: |
+            set -e
+            if [ ! -d /var/www/tuck/.git ]; then
+              git clone https://github.com/DimwitLabs/Tuck.git /var/www/tuck
+            fi
+            cd /var/www/tuck
+            git pull --ff-only
+            git log -1 --oneline

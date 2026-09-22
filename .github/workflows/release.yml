@@ -9,9 +9,11 @@ permissions:
 
 jobs:
   test:
+    name: Test
     uses: ./.github/workflows/ci.yml
 
   image:
+    name: Image
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -60,6 +62,7 @@ jobs:
           push-to-registry: true
 
   release:
+    name: Release
     needs: image
     runs-on: ubuntu-latest
     permissions:
@@ -68,7 +71,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Publish the release
+      - name: Publish the Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
