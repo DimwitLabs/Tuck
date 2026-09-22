@@ -23,7 +23,7 @@ jobs:
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
-          key: ${{ secrets.DO_KEY }}
+          key: ${{ secrets.DO_SSH_KEY }}
           script: |
             set -e
             if [ ! -d /var/www/tuck/.git ]; then
