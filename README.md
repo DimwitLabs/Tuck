@@ -3,6 +3,7 @@
 [![Tuck: all your secrets, tucked in.](landing/og.png)](https://tuck.dimwit.me)
 
 [![CI](https://github.com/DimwitLabs/Tuck/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DimwitLabs/Tuck/actions/workflows/ci.yml?query=branch%3Amain)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/DimwitLabs/Tuck/badge)](https://scorecard.dev/viewer/?uri=github.com/DimwitLabs/Tuck)
 [![AI-DECLARATION: copilot](https://img.shields.io/badge/䷼%20AI--DECLARATION-copilot-fee2e2?labelColor=fee2e2)](https://ai-declaration.md)
 [![Dimwit Pledge](https://dimwit.me/pledge.svg)](https://dimwit.me/pledge)
 
