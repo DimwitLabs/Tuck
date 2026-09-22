@@ -22,4 +22,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A decrypted JSON export for your own backups.
 - A Docker image for amd64 and arm64, with a bundled Postgres that has no network, or your own Postgres over TLS.
 - An audit log of logins, unlocks and wrong answers.
+- A landing page at [tuck.dimwit.me](https://tuck.dimwit.me) and documentation at [docs.tuck.dimwit.me](https://docs.tuck.dimwit.me).
 
