@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tuck.dimwit.me/sitemap.xml
+Sitemap: https://docs.tuck.dimwit.me/sitemap.xml

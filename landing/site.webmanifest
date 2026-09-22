@@ -1,0 +1,14 @@
+{
+  "name": "tuck",
+  "short_name": "tuck",
+  "description": "A self-hosted vault for SSH keys, hosts and files, encrypted in your browser.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#e9edf1",
+  "theme_color": "#e9edf1",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
