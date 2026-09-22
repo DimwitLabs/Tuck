@@ -7,11 +7,15 @@ import (
 
 const maxKeys = 50_000
 
+// A full limiter scans every key to make room; this caps how often a flood of new keys can make it do that.
+const pruneEvery = time.Second
+
 type limiter struct {
 	mu     sync.Mutex
 	limit  int
 	window time.Duration
 	hits   map[string][]time.Time
+	pruned time.Time
 }
 
 func newLimiter(limit int, window time.Duration) *limiter {
@@ -23,7 +27,13 @@ func (l *limiter) allow(key string) bool {
 	defer l.mu.Unlock()
 	now := time.Now()
 	if _, ok := l.hits[key]; !ok && len(l.hits) >= maxKeys {
-		return false
+		if now.Sub(l.pruned) >= pruneEvery {
+			l.dropStale(now)
+			l.pruned = now
+		}
+		if len(l.hits) >= maxKeys {
+			return false
+		}
 	}
 	recent := l.hits[key][:0]
 	for _, t := range l.hits[key] {
@@ -42,7 +52,10 @@ func (l *limiter) allow(key string) bool {
 func (l *limiter) sweep() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	now := time.Now()
+	l.dropStale(time.Now())
+}
+
+func (l *limiter) dropStale(now time.Time) {
 	for k, ts := range l.hits {
 		if len(ts) == 0 || now.Sub(ts[len(ts)-1]) >= l.window {
 			delete(l.hits, k)
