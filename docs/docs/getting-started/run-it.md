@@ -21,7 +21,7 @@ You need Docker and a domain with HTTPS. That's it.
    openssl rand -hex 24    # POSTGRES_PASSWORD
    ```
 
-   `TUCK_SECRET` seals what's in the database. [back it up separately](../using/backups.md#the-secret) — lose it and every vault here is unopenable.
+   `TUCK_SECRET` seals what's in the database. [back it up separately](../using/backups.md#the-secret): lose it and every vault here is unopenable.
 
 3. Start it:
 

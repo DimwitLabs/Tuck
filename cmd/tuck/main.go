@@ -69,7 +69,7 @@ func loadKeys() (*keys.Keys, error) {
 	}
 	if raw == "" {
 		return nil, errors.New("TUCK_SECRET is required; generate one with: openssl rand -hex 32\n" +
-			"keep it outside the database and back it up separately — losing it makes every vault unopenable")
+			"keep it outside the database and back it up separately: losing it makes every vault unopenable")
 	}
 	secret, err := keys.ParseSecret(raw)
 	if err != nil {

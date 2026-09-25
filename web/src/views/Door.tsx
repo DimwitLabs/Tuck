@@ -87,7 +87,7 @@ export function Door() {
         <>
           <p className="lede muted">
             the door is the word you type before tuck shows a login page. it hides tuck from everyone who doesn't know it, and it is not your password. enrol a
-            device and that device opens the door with its own fingerprint, face or pin instead — logging in does not change, you still need your password and
+            device and that device opens the door with its own fingerprint, face or pin instead. logging in does not change, you still need your password and
             your three answers.
           </p>
           <ErrorNote error={error} />

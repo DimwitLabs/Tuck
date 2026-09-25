@@ -30,13 +30,13 @@ The server hands out the next question only after checking the previous answer's
 
 **Someone who steals the database** has nothing to work with. Without `TUCK_SECRET` they can't unseal a salt, so they can't run the key derivation at all, let alone check whether a guess was right. Tuck verifies the secret against a sealed value at startup and refuses to run if it doesn't match.
 
-**Someone who steals the database *and* the secret** is back to guessing offline, and there the answers add up rather than multiplying. Because the server must be able to tell a right answer from a wrong one — otherwise the pauses and freezes couldn't exist — and must keep question two hidden until answer one lands, it stores something it can check each answer against. Anyone with both halves can use those to attack the password on its own, then each answer on its own: four modest searches in sequence rather than one enormous one. Effective strength is roughly your strongest single secret, so answers nobody could look up matter more than clever ones, and the secret does not belong in your database backups.
+**Someone who steals the database *and* the secret** is back to guessing offline, and there the answers add up rather than multiplying. The server must be able to tell a right answer from a wrong one, otherwise the pauses and freezes couldn't exist, and it must keep question two hidden until answer one lands. So it stores something it can check each answer against. Anyone with both halves can use those to attack the password on its own, then each answer on its own: four modest searches in sequence rather than one enormous one. Effective strength is roughly your strongest single secret, so answers nobody could look up matter more than clever ones, and the secret does not belong in your database backups.
 
 **Someone who can change the database** can't read or forge anything. If they put back an old copy of an item, an old version of a file, something you deleted, or roll back the whole vault, your browser notices and tells you.
 
 **Someone on the network** sees only TLS, since Tuck refuses plain HTTP. The bundled Postgres has no network at all; Tuck reaches it through a password-protected socket.
 
-**Someone who knows your username** can't do anything with it. Answering questions requires a session, so nobody can spend even one wrong answer against your account without your password first — there is no way to freeze someone out remotely. Separately, browsers you've logged in from before skip the login limit that strangers run into.
+**Someone who knows your username** can't do anything with it. Answering questions requires a session, so nobody can spend even one wrong answer against your account without your password first. There is no way to freeze someone out remotely. Separately, browsers you've logged in from before skip the login limit that strangers run into.
 
 **Someone at your unlocked computer** has two quiet minutes before it locks, and leaving the tab logs you out. Changing your password needs the current one, and a few wrong tries end the session.
 

@@ -22,7 +22,7 @@ It's all ciphertext and sealed values, so a backup on its own gives nothing away
 docker compose exec -T db sh -c 'PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U tuck -Fc tuck' > tuck.dump
 ```
 
-Restore it somewhere now and then to be sure it works — with the same `TUCK_SECRET`, or it won't open.
+Restore it somewhere now and then to be sure it works, with the same `TUCK_SECRET`, or it won't open.
 
 ## An export
 

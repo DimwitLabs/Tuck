@@ -13,7 +13,7 @@ This page is the long version, in plain words. [how it's encrypted](./how-it-is-
 
 Getting to plaintext means passing three separate things. They fail differently.
 
-**The gate:** an optional phrase for the whole instance. The page is deliberately blank — no field, no label, nothing that looks like a login — so a stranger who finds your URL sees nothing worth scraping. It protects the app, not your data: getting through it gets you a login form. See [the front door](../using/front-door.md).
+**The gate:** an optional phrase for the whole instance. The page is deliberately blank: no field, no label, nothing that looks like a login, so a stranger who finds your URL sees nothing worth scraping. It protects the app, not your data: getting through it gets you a login form. See [the front door](../using/front-door.md).
 
 **Login:** username and password. Your browser stretches the password and derives an *auth key*; only that goes to the server. A session at this point can list nothing and read nothing.
 
@@ -43,17 +43,17 @@ Three things follow:
 - **The order is fixed:** each fold feeds the next, so the answers can't be reordered.
 - **Deriving the key isn't free:** four passes over 64 MiB, about half a second on a fast laptop.
 
-Answers are tidied before hashing — trimmed, inner spaces collapsed, lowercased — so capitals and stray spaces are forgiven. Punctuation isn't: `rex.` and `rex` are different answers.
+Answers are tidied before hashing, trimmed, inner spaces collapsed and lowercased, so capitals and stray spaces are forgiven. Punctuation isn't: `rex.` and `rex` are different answers.
 
 ## What the server holds
 
 | Stored | What it is | Any use to a thief with the database? |
 |---|---|---|
-| The login hash | An HMAC of your auth key, keyed by `TUCK_SECRET` | No — guesses can't be tested without the secret |
+| The login hash | An HMAC of your auth key, keyed by `TUCK_SECRET` | No, guesses can't be tested without the secret |
 | The wrapped vault key | Encrypted under the chain, then sealed | No |
-| The salts | Random, one per user and one per question, sealed | No — without them the derivation can't even run |
+| The salts | Random, one per user and one per question, sealed | No, without them the derivation can't even run |
 | Each answer's proof | An HMAC, keyed by `TUCK_SECRET` | No |
-| The questions | Encrypted under the chain, then sealed | No — not even the questions can be read |
+| The questions | Encrypted under the chain, then sealed | No, not even the questions can be read |
 | Your items | AES-256-GCM under the vault key | No |
 
 Each question is encrypted under the chain as it stands at that point, so the server *cannot* show you question two before answer one is right. That isn't the interface being polite; it's a decryption that can't happen yet.
@@ -74,9 +74,9 @@ That makes a stolen database inert. No salts to run the derivation with, nothing
 
 This is the part worth understanding, because it decides what your answers are actually worth.
 
-**Through the server, the four secrets multiply:** an attacker needs the gate, then your password for a session, and only then can they try answers — one at a time, in order, against [pauses that double](../using/unlocking.md#wrong-answers). The wrapped vault key is never sent until all three proofs land. There's no way to test answer two without having answer one.
+**Through the server, the four secrets multiply:** an attacker needs the gate, then your password for a session, and only then can they try answers, one at a time, in order, against [pauses that double](../using/unlocking.md#wrong-answers). The wrapped vault key is never sent until all three proofs land. There's no way to test answer two without having answer one.
 
-**With the database *and* the secret, they add up:** the server has to tell a right answer from a wrong one, or the pauses couldn't exist, and it has to keep question two hidden until answer one lands. Both need something it can check each answer against. Anyone holding the database and `TUCK_SECRET` together can use those to attack the password on its own, then answer 1 on its own, and so on — four modest searches in a row rather than one enormous one.
+**With the database *and* the secret, they add up:** the server has to tell a right answer from a wrong one, or the pauses couldn't exist, and it has to keep question two hidden until answer one lands. Both need something it can check each answer against. Anyone holding the database and `TUCK_SECRET` together can use those to attack the password on its own, then answer 1 on its own, and so on: four modest searches in a row rather than one enormous one.
 
 So against that attacker the strength is roughly your strongest single secret, not all four multiplied. A single guess costs one Argon2id pass, around 130 ms, and guesses run in parallel across cores.
 
@@ -107,9 +107,9 @@ Two separate systems.
 | 20 | 2 hours | 3h 45m |
 | 25 | 4 hours | 7h 45m |
 | 30 | 8 hours | 15h 45m |
-| 35 | Frozen | — |
+| 35 | Frozen | n/a |
 
-Thirty-five wrong answers freeze the account outright: no timer, no way back without someone [lifting it](../using/unlocking.md#frozen). Deliberate — anyone who has ground through fifteen hours of doubling pauses has earned a human being looking at it. During a pause even the right answer is refused, a full unlock resets the count, and `TUCK_FREEZE_AFTER` moves the threshold.
+Thirty-five wrong answers freeze the account outright: no timer, no way back without someone [lifting it](../using/unlocking.md#frozen). Deliberate: anyone who has ground through fifteen hours of doubling pauses has earned a human being looking at it. During a pause even the right answer is refused, a full unlock resets the count, and `TUCK_FREEZE_AFTER` moves the threshold.
 
 A few details that come up:
 
@@ -131,7 +131,7 @@ Touch ID and the rest replace the *gate phrase* only. A passkey proves a device 
 
 ## What Tuck assumes about you
 
-It's self-hosted, so it defends hard against the two things you're actually likely to meet: someone poking at your URL, and a database that gets out — a snapshot, a mounted volume, a dump in the wrong place. It doesn't pretend to defend against your own server being taken over, because then the attacker controls the code your browser runs, and nothing encrypted in a browser survives that.
+It's self-hosted, so it defends hard against the two things you're actually likely to meet: someone poking at your URL, and a database that gets out: a snapshot, a mounted volume, a dump in the wrong place. It doesn't pretend to defend against your own server being taken over, because then the attacker controls the code your browser runs, and nothing encrypted in a browser survives that.
 
 - **You keep the host patched:** root on the box is the end of it.
 - **`TUCK_SECRET` lives outside the database and is backed up separately:** lose it and every vault here is unopenable. Leak it alongside a dump and the sealing is undone. See [backups](../using/backups.md#the-secret).

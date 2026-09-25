@@ -35,7 +35,7 @@ Tuck checks the secret against a sealed value at startup and refuses to run if i
 
 Worth understanding, because it decides how much your answers are really worth.
 
-**Through the server, the four secrets multiply.** An attacker needs the [front door](../using/front-door.md), then your password for a session, and only then can they try answers — one at a time, in order, against [pauses that double](../using/unlocking.md#wrong-answers). There's no way to test answer two without having answer one.
+**Through the server, the four secrets multiply.** An attacker needs the [front door](../using/front-door.md), then your password for a session, and only then can they try answers, one at a time, in order, against [pauses that double](../using/unlocking.md#wrong-answers). There's no way to test answer two without having answer one.
 
 **With the database and the secret, they add up.** The server has to tell a right answer from a wrong one, or pauses and freezes couldn't exist, and it has to keep question two hidden until answer one lands. Both need something it can check each answer against. Anyone holding both the database and `TUCK_SECRET` can use those to attack the password first, then answer 1, then answer 2, each on its own. That's four modest searches in a row rather than one enormous one, so the strength is roughly your strongest single secret, not all four multiplied.
 
