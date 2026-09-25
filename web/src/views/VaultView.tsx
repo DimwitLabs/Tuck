@@ -3,16 +3,17 @@ import { useState } from "react";
 import type { Features } from "../api";
 import type { Keyring, Vault } from "../crypto/vault";
 import { type Loaded, useVaultData } from "../vaultStore";
+import { Access } from "./Access";
+import { Door } from "./Door";
 import { Export } from "./Export";
 import { Files } from "./Files";
 import { How } from "./How";
 import { Hosts } from "./Hosts";
 import { Install } from "./Install";
 import { Keys } from "./Keys";
-import { Logo } from "./ui";
-import { Settings } from "./Settings";
+import { Logo, ThemeSwitch } from "./ui";
 
-const TABS = ["how", "hosts", "keys", "files", "install", "export", "settings"] as const;
+const TABS = ["how", "hosts", "keys", "files", "install", "export", "access", "door"] as const;
 type Tab = (typeof TABS)[number];
 
 const HIDDEN: Record<Features, Tab[]> = { both: [], ssh: ["files"], files: ["hosts", "keys", "install"] };
@@ -43,40 +44,42 @@ export function VaultView({ vault, keyring, loaded, username, questions, feature
 
   return (
     <div className="shell">
-      <div className="sheet">
-        <header className="appbar">
-          <div className="appbar-main">
-            <span className="wordmark">
-              <Logo />
-              tuck
-            </span>
-            <nav className="tabs" aria-label="sections">
-              {tabs.map((t) => (
-                <button
-                  key={t}
-                  className={`act ${t === tab ? "here" : ""}`}
-                  onClick={() => {
-                    setTab(t);
-                    setQuery("");
-                  }}
-                  aria-current={t === tab ? "page" : undefined}
-                >
-                  {t}
-                  {counts[t] !== undefined && <span className="count">{counts[t]}</span>}
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div className="who">
-            <span className="muted">{username}</span>
-            <button className="act" onClick={onLock} title="forget the keys in this tab; answer your questions to come back">
-              lock
-            </button>
-            <button className="act quiet" onClick={onLogout}>
-              log out
-            </button>
-          </div>
-        </header>
+      <div className="deck">
+        <div className="bar">
+          <header className="appbar">
+            <div className="appbar-main">
+              <span className="wordmark">
+                <Logo />
+                tuck
+              </span>
+              <nav className="tabs" aria-label="sections">
+                {tabs.map((t) => (
+                  <button
+                    key={t}
+                    className={`act ${t === tab ? "here" : ""}`}
+                    onClick={() => {
+                      setTab(t);
+                      setQuery("");
+                    }}
+                    aria-current={t === tab ? "page" : undefined}
+                  >
+                    {t}
+                    {counts[t] !== undefined && <span className="count">{counts[t]}</span>}
+                  </button>
+                ))}
+              </nav>
+            </div>
+            <div className="who">
+              <button className="act" onClick={onLock} title="forget the keys in this tab; answer your questions to come back">
+                lock
+              </button>
+              <button className="act quiet" onClick={onLogout}>
+                log out
+              </button>
+            </div>
+          </header>
+          <ThemeSwitch />
+        </div>
         {data.problems.length > 0 && (
           <div className="warning" role="alert">
             <h3>the server may have tampered with this vault</h3>
@@ -93,7 +96,8 @@ export function VaultView({ vault, keyring, loaded, username, questions, feature
         {tab === "files" && <Files data={data} query={query} onQuery={setQuery} maxFileBytes={maxFileBytes} />}
         {tab === "install" && <Install data={data} />}
         {tab === "export" && <Export data={data} />}
-        {tab === "settings" && <Settings keyring={keyring} questions={questions} onRekeyed={onRekeyed} />}
+        {tab === "access" && <Access keyring={keyring} questions={questions} username={username} onRekeyed={onRekeyed} />}
+        {tab === "door" && <Door />}
       </div>
     </div>
   );

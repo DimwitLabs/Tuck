@@ -5,7 +5,7 @@ import { generateKey, type KeySpec } from "../ssh/keygen";
 import { describeKey } from "../ssh/openssh";
 import type { CredentialItem } from "../types";
 import type { VaultData } from "../vaultStore";
-import { CopyButton, downloadBytes, ErrorNote, errorMessage, Field, nextFrame, Search, Sheet, splitList, Spinner, Stamps } from "./ui";
+import { Board, CopyButton, downloadBytes, ErrorNote, errorMessage, Field, nextFrame, Search, Sheet, splitList, Spinner, Stamps } from "./ui";
 
 interface Props {
   data: VaultData;
@@ -26,16 +26,17 @@ export function Keys({ data, query, onQuery }: Props) {
   const secret = revealed ? data.credentials.find((c) => c.id === revealed)?.data : undefined;
 
   return (
-    <section className="panel">
-      <div className="section-head">
-        <h2>keys</h2>
+    <Board
+      title="keys"
+      action={
         <button className="act go" onClick={() => setEditing({ data: { name: "", tags: [] } })}>
           new key
         </button>
-      </div>
-      {data.credentials.length > 0 && <Search value={query} onChange={onQuery} what="keys" />}
+      }
+      intro={data.credentials.length > 0 ? <Search value={query} onChange={onQuery} what="keys" /> : undefined}
+    >
       {shown.length === 0 ? (
-        <p className="empty">{query ? "nothing matches." : "no keys yet. generate one here, or paste an existing private key."}</p>
+        <p className="empty card">{query ? "nothing matches." : "no keys yet. generate one here, or paste an existing private key."}</p>
       ) : (
         <ul className="register">
           {shown.map(({ id, data: c }) => {
@@ -131,7 +132,7 @@ export function Keys({ data, query, onQuery }: Props) {
           </div>
         </Sheet>
       )}
-    </section>
+    </Board>
   );
 }
 

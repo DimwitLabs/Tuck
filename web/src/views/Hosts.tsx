@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { aliasesFor, renderConfig, slugify } from "../ssh/config";
 import type { HostItem } from "../types";
 import type { VaultData } from "../vaultStore";
-import { CopyButton, ErrorNote, errorMessage, Field, Search, Sheet, splitList, Spinner, Stamps } from "./ui";
+import { Board, CopyButton, ErrorNote, errorMessage, Field, Search, Sheet, splitList, Spinner, Stamps } from "./ui";
 
 interface Props {
   data: VaultData;
@@ -26,19 +26,25 @@ export function Hosts({ data, query, onQuery }: Props) {
   const keysWithPrivate = data.credentials.filter((c) => c.data.privateKey).length;
 
   return (
-    <section className="panel">
-      <div className="section-head">
-        <p className="lede">
-          <b>{data.hosts.length}</b> host{data.hosts.length === 1 ? "" : "s"} and <b>{keysWithPrivate}</b> key
-          {keysWithPrivate === 1 ? "" : "s"}, tucked away.
-        </p>
+    <Board
+      title="hosts"
+      action={
         <button className="act go" onClick={() => setEditing({ data: { name: "", aliases: [], hostname: "", tags: [] } })}>
           new host
         </button>
-      </div>
-      {data.hosts.length > 0 && <Search value={query} onChange={onQuery} what="hosts" />}
+      }
+      intro={
+        <>
+          <p className="lede">
+            <b>{data.hosts.length}</b> host{data.hosts.length === 1 ? "" : "s"} and <b>{keysWithPrivate}</b> key
+            {keysWithPrivate === 1 ? "" : "s"}, tucked away.
+          </p>
+          {data.hosts.length > 0 && <Search value={query} onChange={onQuery} what="hosts" />}
+        </>
+      }
+    >
       {shown.length === 0 ? (
-        <p className="empty">{query ? "nothing matches." : "no hosts yet. each host becomes something you can type after ssh."}</p>
+        <p className="empty card">{query ? "nothing matches." : "no hosts yet. each host becomes something you can type after ssh."}</p>
       ) : (
         <ul className="register">
           {shown.map(({ id, data: h }) => {
@@ -90,7 +96,7 @@ export function Hosts({ data, query, onQuery }: Props) {
           }}
         />
       )}
-    </section>
+    </Board>
   );
 }
 

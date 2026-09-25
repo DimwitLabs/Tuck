@@ -15,6 +15,26 @@ const IDLE_LOCK_MS = 2 * 60 * 1000;
 const IDLE = "locked after 2 minutes without activity.";
 const IDLE_UNLOCK = "logged out after 2 minutes without an answer.";
 const LEFT_TAB = "you left the tab, so tuck logged you out.";
+const RELOADED = "reloading logs you out. your keys live in the tab, never on the server.";
+
+const WAS_IN = "tuck.signed-in";
+
+const mark = (on: boolean) => {
+  try {
+    if (on) sessionStorage.setItem(WAS_IN, "1");
+    else sessionStorage.removeItem(WAS_IN);
+  } catch {
+    // a browser with storage blocked simply gets no hint
+  }
+};
+
+const wasSignedIn = () => {
+  try {
+    return sessionStorage.getItem(WAS_IN) === "1";
+  } catch {
+    return false;
+  }
+};
 
 type Phase =
   | { name: "loading" }
@@ -42,10 +62,12 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    const reloaded = wasSignedIn();
+    mark(false);
     void api
       .logout()
       .catch(() => {})
-      .finally(() => refresh(null));
+      .finally(() => refresh(reloaded ? RELOADED : null));
   }, [refresh]);
 
   const login = async (name: string, password: string) => {
@@ -82,6 +104,7 @@ export function App() {
   }, []);
 
   const lock = useCallback((notice: string | null) => {
+    if (!notice) mark(false);
     era.current++;
     forgetClipboard();
     void api.lock().catch(() => {});
@@ -90,6 +113,7 @@ export function App() {
 
   const logout = useCallback(
     (notice: string | null) => {
+      if (!notice) mark(false);
       era.current++;
       forgetClipboard();
       setPhase({ name: "loading" });
@@ -102,6 +126,11 @@ export function App() {
   );
 
   const signedIn = phase.name === "unlock" || phase.name === "vault";
+
+  // The marker is only read at page load, so a reload is the only way it comes back.
+  useEffect(() => {
+    if (signedIn) mark(true);
+  }, [signedIn]);
 
   useEffect(() => {
     if (phase.name === "gate") document.title = phase.word;

@@ -1,6 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { copyText } from "../clipboard";
+import lampOff from "../assets/sfx/lamp-off.mp3";
+import lampOn from "../assets/sfx/lamp-on.mp3";
+import { flipTheme } from "../theme";
 import { normalizeAnswer } from "../crypto/vault";
 
 export function Field({ label, hint, wide, children }: { label: string; hint?: ReactNode; wide?: boolean; children: ReactNode }) {
@@ -102,6 +105,40 @@ export const nextFrame = () => new Promise((r) => setTimeout(r, 30));
 
 export const roman = (n: number) => ["i", "ii", "iii"][n - 1] ?? String(n);
 
+export function Board({
+  title,
+  action,
+  intro,
+  onSubmit,
+  children,
+}: {
+  title: string;
+  action?: ReactNode;
+  intro?: ReactNode;
+  onSubmit?: (e: FormEvent) => void;
+  children: ReactNode;
+}) {
+  const head = (
+    <>
+      <div className="card">
+        <div className="section-head">
+          <h2>{title}</h2>
+          {action}
+        </div>
+        {intro}
+      </div>
+      {children}
+    </>
+  );
+  return onSubmit ? (
+    <form className="board" onSubmit={onSubmit}>
+      {head}
+    </form>
+  ) : (
+    <section className="board">{head}</section>
+  );
+}
+
 export function Search({ value, onChange, what }: { value: string; onChange: (v: string) => void; what: string }) {
   return (
     <input
@@ -132,6 +169,23 @@ export function questionProblem(questions: string[], answers: string[], repeats:
   if (mismatch >= 0) return `answer ${roman(mismatch + 1)} doesn't match when typed again.`;
   if (answers.some((a) => normalizeAnswer(a).length < 2)) return "each answer needs at least two characters.";
   return null;
+}
+
+export function ThemeSwitch() {
+  const sounds = useRef<Record<string, HTMLAudioElement>>({});
+
+  const flick = () => {
+    const next = flipTheme();
+    const sound = (sounds.current[next] ??= new Audio(next === "light" ? lampOn : lampOff));
+    sound.currentTime = 0;
+    void sound.play().catch(() => {});
+  };
+
+  return (
+    <button className="flick" type="button" onClick={flick} aria-label="switch theme" title="switch theme">
+      <span className="lever" />
+    </button>
+  );
 }
 
 export function Logo() {

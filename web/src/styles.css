@@ -1,3 +1,9 @@
+@property --night {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 :root {
   --ground: #e9edf1;
   --paper: #f8f9fb;
@@ -9,18 +15,23 @@
   --rule: #cfd6de;
   --line: #9aa6b3;
   --well: #eef1f5;
+  --sunk: #e2e7ee;
   --straw: #b4863a;
   --plum: #74528f;
   --temper-blue: #2d5e9c;
   --danger: #a3261c;
   --danger-soft: rgb(163 38 28 / 7%);
+  --night: 0;
+  --glow: rgb(244 190 110 / 38%);
+  --sun: #f2c27a;
+  --cloud: #fbfcfd;
   --serif: "Spectral", "Iowan Old Style", Georgia, serif;
   --mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --ground: #0a0e13;
     --paper: #10161e;
     --edge: #1d2733;
@@ -31,13 +42,38 @@
     --rule: #222d3a;
     --line: #3b4958;
     --well: #151d27;
+    --sunk: #0c131b;
     --straw: #d6ad62;
     --plum: #a987c6;
     --temper-blue: #6d9ee0;
     --danger: #f08a80;
     --danger-soft: rgb(240 138 128 / 8%);
+    --night: 1;
+    --glow: rgb(109 158 224 / 12%);
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0a0e13;
+  --paper: #10161e;
+  --edge: #1d2733;
+  --ink: #d9e0e8;
+  --muted: #8593a3;
+  --steel: #8fb5dc;
+  --steel-soft: rgb(143 181 220 / 35%);
+  --rule: #222d3a;
+  --line: #3b4958;
+  --well: #151d27;
+  --sunk: #0c131b;
+  --straw: #d6ad62;
+  --plum: #a987c6;
+  --temper-blue: #6d9ee0;
+  --danger: #f08a80;
+  --danger-soft: rgb(240 138 128 / 8%);
+  --night: 1;
+  --glow: rgb(109 158 224 / 12%);
+  color-scheme: dark;
 }
 
 * {
@@ -193,17 +229,28 @@ ul.notice {
   width: 100%;
   font: inherit;
   color: var(--ink);
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--line);
+  background-color: var(--sunk);
+  border: 1px solid var(--edge);
+  border-bottom-color: var(--line);
   border-radius: 0;
-  padding: 0.25rem 0;
+  padding: 0.45rem 0.6rem;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.line:hover:not(:disabled):not(:focus) {
+  border-bottom-color: var(--ink);
 }
 
 .line:focus {
   outline: none;
-  border-bottom: 2px solid var(--steel);
-  padding-bottom: calc(0.25rem - 1px);
+  background-color: var(--paper);
+  border-color: var(--steel);
+}
+
+.line:disabled {
+  background-color: transparent;
+  border-color: var(--rule);
+  color: var(--muted);
 }
 
 .line::placeholder {
@@ -276,13 +323,107 @@ textarea.mono {
 }
 
 .auth {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 2.5rem 16px;
 }
 
+.sky {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 36rem;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(ellipse 60% 70% at 86% 0%, var(--glow), transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  transition: --night 0.9s ease;
+}
+
+.sky svg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: max(100%, 72rem);
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.morning {
+  opacity: calc(1 - var(--night));
+}
+
+.night {
+  opacity: var(--night);
+}
+
+.sun {
+  fill: var(--sun);
+  opacity: 0.5;
+}
+
+.sun.halo {
+  opacity: 0.16;
+}
+
+.cloud {
+  fill: var(--cloud);
+  opacity: 0.85;
+  animation: drift 90s ease-in-out infinite alternate;
+}
+
+.cloud.slow {
+  animation-duration: 140s;
+  animation-direction: alternate-reverse;
+}
+
+.bird {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+
+.star {
+  fill: #d9e0e8;
+}
+
+.star.twinkle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.star.twinkle:nth-child(3n) {
+  animation-delay: -1.3s;
+  animation-duration: 5.5s;
+}
+
+.star.twinkle:nth-child(3n + 1) {
+  animation-delay: -2.6s;
+  animation-duration: 3.2s;
+}
+
+.moon {
+  fill: #d6ad62;
+  opacity: 0.85;
+}
+
+@keyframes drift {
+  to {
+    transform: translateX(-70px);
+  }
+}
+
+@keyframes twinkle {
+  50% {
+    opacity: 0.2;
+  }
+}
+
 .auth-sheet {
+  position: relative;
   width: min(100%, 46rem);
   display: flex;
   flex-direction: column;
@@ -293,6 +434,13 @@ textarea.mono {
 }
 
 .brand {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.brand > div {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
@@ -342,6 +490,36 @@ textarea.mono {
 
 .logo-fold {
   fill: #8fb5dc;
+}
+
+.flick {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex: none;
+  width: 1.35rem;
+  height: 2.2rem;
+  padding: 0.18rem;
+  background: var(--sunk);
+  border: 1px solid var(--edge);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.flick:hover {
+  border-color: var(--line);
+}
+
+.lever {
+  display: block;
+  height: 42%;
+  background: var(--muted);
+  transform: translateY(calc(var(--night) * 138%));
+  transition: transform 0.12s cubic-bezier(0.3, 1.6, 0.6, 1), background 0.12s ease;
+}
+
+.flick:hover .lever {
+  background: var(--ink);
 }
 
 .brand p {
@@ -424,10 +602,87 @@ textarea.mono {
 .question-set {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1rem;
   margin: 0;
-  padding: 0;
-  border: 0;
+}
+
+.question-set,
+.entry {
+  padding: 1.25rem 1.35rem;
+  background: var(--well);
+  border: 1px solid var(--edge);
+}
+
+.fold {
+  display: block;
+  align-self: start;
+}
+
+.fold > summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary::after {
+  content: "+";
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.fold[open] > summary::after {
+  content: "–";
+}
+
+.fold[open] > summary {
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.fold-note {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fold[open] > summary .fold-note {
+  visibility: hidden;
+}
+
+.preview-text {
+  max-height: 60vh;
+  margin: 0;
+  padding: 1rem 1.1rem;
+  overflow: auto;
+  background: var(--well);
+  border: 1px solid var(--edge);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  align-self: flex-start;
+  border: 1px solid var(--edge);
 }
 
 .temper {
@@ -496,15 +751,55 @@ textarea.mono {
   padding: 2.5rem 16px 4rem;
 }
 
-.sheet {
+.deck {
   max-width: 76rem;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.7rem;
-  padding: 2.3rem 2.6rem;
+  gap: 1.4rem;
+}
+
+.card,
+.panel {
   background: var(--paper);
   border: 1px solid var(--edge);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.7rem 1.9rem;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.board .entry,
+.board .question-set {
+  background: var(--paper);
+}
+
+.register.tops {
+  align-items: start;
+}
+
+.bar {
+  display: flex;
+  align-items: stretch;
+  gap: 1.4rem;
+}
+
+.bar > .appbar {
+  flex: 1;
+  min-width: 0;
+}
+
+.bar > .flick {
+  align-self: center;
 }
 
 .appbar {
@@ -513,8 +808,7 @@ textarea.mono {
   align-items: flex-end;
   gap: 1rem 2rem;
   flex-wrap: wrap;
-  padding-bottom: 1.2rem;
-  border-bottom: 1px solid var(--rule);
+  padding: 0.2rem 1.9rem 0.9rem 0;
 }
 
 .appbar .wordmark {
@@ -547,6 +841,7 @@ textarea.mono {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding: 2.1rem 2.4rem;
 }
 
 .section-head {
@@ -585,7 +880,7 @@ textarea.mono {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 25rem), 1fr));
-  gap: 1.9rem 2.8rem;
+  gap: 1.2rem;
 }
 
 .entry {
@@ -821,13 +1116,46 @@ textarea.mono {
   }
 
   .auth-sheet,
-  .sheet,
+  .card,
+  .panel,
   .overlay .editor {
     padding: 1.5rem 1.2rem;
   }
 
+  .appbar {
+    padding: 0 1.2rem 0.6rem 0;
+  }
+
   .shell {
     padding-top: 1rem;
+  }
+
+  .bar {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .appbar {
+    display: contents;
+  }
+
+  .bar .appbar-main {
+    flex: 1 1 100%;
+  }
+
+  .bar .who {
+    flex: 1;
+  }
+
+
+  .appbar-main,
+  .who {
+    padding: 0;
+  }
+
+  .who {
+    justify-content: flex-end;
+    gap: 1.6rem;
   }
 
   .question {
@@ -836,6 +1164,16 @@ textarea.mono {
 
   .entry {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .question-set,
+  .entry {
+    padding: 1rem 1.1rem;
+  }
+
+  .row > .field,
+  .row > .field.wide {
+    flex-basis: 100%;
   }
 
   .entry .ops {
