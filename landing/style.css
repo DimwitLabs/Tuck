@@ -22,8 +22,6 @@
   --sun: #f2c27a;
   --cloud: #fbfcfd;
   --night: 0;
-  --sun-icon: none;
-  --moon-icon: inline;
   --serif: "Spectral", "Iowan Old Style", Georgia, serif;
   --mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --measure: 50rem;
@@ -45,8 +43,6 @@
     --straw: #d6ad62;
     --glow: rgb(109 158 224 / 12%);
     --night: 1;
-    --sun-icon: inline;
-    --moon-icon: none;
     color-scheme: dark;
   }
 }
@@ -65,8 +61,6 @@
   --straw: #d6ad62;
   --glow: rgb(109 158 224 / 12%);
   --night: 1;
-  --sun-icon: inline;
-  --moon-icon: none;
   color-scheme: dark;
 }
 
@@ -188,38 +182,34 @@ main,
   }
 }
 
-.theme-toggle {
-  display: inline-grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--muted);
+.flick {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex: none;
+  width: 1.35rem;
+  height: 2.2rem;
+  padding: 0.18rem;
+  background: var(--well);
+  border: 1px solid var(--edge);
+  border-radius: 0;
   cursor: pointer;
 }
 
-.theme-toggle:hover {
-  color: var(--ink);
+.flick:hover {
+  border-color: var(--line);
 }
 
-.theme-toggle svg {
-  width: 1.15rem;
-  height: 1.15rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.lever {
+  display: block;
+  height: 42%;
+  background: var(--muted);
+  transform: translateY(calc(var(--night) * 138%));
+  transition: transform 0.12s cubic-bezier(0.3, 1.6, 0.6, 1), background 0.12s ease;
 }
 
-.theme-toggle .to-dark {
-  display: var(--moon-icon);
-}
-
-.theme-toggle .to-light {
-  display: var(--sun-icon);
+.flick:hover .lever {
+  background: var(--ink);
 }
 
 .quick {

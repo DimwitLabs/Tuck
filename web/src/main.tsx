@@ -10,6 +10,9 @@ import "@fontsource/spectral/600.css";
 
 import { App } from "./App";
 import "./styles.css";
+import { rememberTheme } from "./theme";
+
+rememberTheme();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, ApiError, type StepResponse } from "../api";
 import { type Keyring, QUESTION_COUNT, type Unlocker, type Vault } from "../crypto/vault";
 import { Brand } from "./Auth";
+import { Sky } from "./Sky";
 import { ErrorNote, errorMessage, nextFrame, roman, Spinner } from "./ui";
 
 interface Props {
@@ -98,6 +99,7 @@ export function Unlock({ username, unlocker, first, onUnlocked, onCancel }: Prop
   const wait = minutes >= 120 ? `${Math.ceil(minutes / 60)} hours` : `${minutes} minute${minutes === 1 ? "" : "s"}`;
   return (
     <main className="auth">
+      <Sky />
       <div className="auth-sheet">
         <Brand line={`unlocking ${username}'s vault`} />
         <div className="stack" style={{ gap: ".9rem" }}>

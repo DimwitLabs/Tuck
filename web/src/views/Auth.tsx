@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 
 import { QUESTION_COUNT } from "../crypto/vault";
 import { Basics } from "./Basics";
-import { ErrorNote, errorMessage, Field, Logo, nextFrame, questionProblem, roman, Spinner } from "./ui";
+import { Sky } from "./Sky";
+import { ErrorNote, errorMessage, Field, Logo, nextFrame, questionProblem, roman, Spinner, ThemeSwitch } from "./ui";
 
 interface Props {
   signupOpen: boolean;
@@ -23,11 +24,14 @@ const SUGGESTIONS = [
 export function Brand({ line }: { line: string }) {
   return (
     <header className="brand">
-      <h1 className="wordmark">
-        <Logo />
-        tuck
-      </h1>
-      <p>{line}</p>
+      <div>
+        <h1 className="wordmark">
+          <Logo />
+          tuck
+        </h1>
+        <p>{line}</p>
+      </div>
+      <ThemeSwitch />
     </header>
   );
 }
@@ -36,6 +40,7 @@ export function Auth({ signupOpen, initialUsername, notice, onLogin, onSignup }:
   const [mode, setMode] = useState<"login" | "signup">(signupOpen && !initialUsername ? "signup" : "login");
   return (
     <main className="auth">
+      <Sky />
       <div className="auth-sheet">
         <Brand line="all your secrets, tucked in." />
         {signupOpen && (

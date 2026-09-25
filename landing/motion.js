@@ -3,12 +3,16 @@
   const dark = matchMedia("(prefers-color-scheme: dark)");
   const current = () => root.dataset.theme || (dark.matches ? "dark" : "light");
 
-  document.querySelector(".theme-toggle")?.addEventListener("click", () => {
+  const clicks = {};
+  document.querySelector(".flick")?.addEventListener("click", () => {
     const next = current() === "dark" ? "light" : "dark";
     root.dataset.theme = next;
     try {
       localStorage.setItem("theme", next);
     } catch {}
+    const sound = (clicks[next] ??= new Audio(next === "light" ? "/sfx/lamp-on.mp3" : "/sfx/lamp-off.mp3"));
+    sound.currentTime = 0;
+    sound.play().catch(() => {});
   });
 
   document.querySelectorAll("[data-copy]").forEach((button) => {
