@@ -112,5 +112,7 @@ export function passkeyProblem(err: unknown): string | null {
   if (name === "NotAllowedError" || name === "AbortError") return null;
   if (name === "InvalidStateError") return "this device is already enrolled.";
   if (name === "SecurityError") return "this address doesn't match the one tuck is configured with.";
-  return "that device could not be enrolled.";
+  if (name === "NotSupportedError") return "this device can't make the kind of passkey tuck asks for.";
+  if (name === "ConstraintError") return "this device needs a screen lock before it can hold a passkey.";
+  return name ? `that device could not be enrolled (${name}).` : "that device could not be enrolled.";
 }

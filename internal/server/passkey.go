@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -166,6 +167,7 @@ func (s *Server) finishPasskey(w http.ResponseWriter, r *http.Request) error {
 	label := deviceLabel(r.URL.Query().Get("label"))
 	cred, err := s.auth.FinishRegistration(user, *session, r)
 	if err != nil {
+		slog.Warn("passkey enrolment refused", "ip", s.clientIP(r), "err", err)
 		return fail(http.StatusBadRequest, "that device could not be enrolled")
 	}
 	transports := make([]string, 0, len(cred.Transport))

@@ -54,7 +54,7 @@ export function Door() {
       setRows(res.passkeys);
       void accepted(res.userId, res.passkeys);
     } catch (err) {
-      const problem = err instanceof Error && err.name ? passkeyProblem(err) : errorMessage(err);
+      const problem = err instanceof DOMException ? passkeyProblem(err) : errorMessage(err);
       if (problem) setError(problem);
     } finally {
       setBusy(false);

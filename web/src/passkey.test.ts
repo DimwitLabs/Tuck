@@ -142,7 +142,13 @@ describe("passkeyProblem", () => {
   it("explains the ones worth explaining", () => {
     expect(passkeyProblem(Object.assign(new Error(), { name: "InvalidStateError" }))).toMatch(/already enrolled/);
     expect(passkeyProblem(Object.assign(new Error(), { name: "SecurityError" }))).toMatch(/address/);
-    expect(passkeyProblem(new Error("who knows"))).toMatch(/could not be enrolled/);
+    expect(passkeyProblem(Object.assign(new Error(), { name: "NotSupportedError" }))).toMatch(/kind of passkey/);
+    expect(passkeyProblem(Object.assign(new Error(), { name: "ConstraintError" }))).toMatch(/screen lock/);
+  });
+
+  it("names the ones it has no words for, so a report says something", () => {
+    expect(passkeyProblem(Object.assign(new Error(), { name: "UnknownError" }))).toMatch(/could not be enrolled \(UnknownError\)/);
+    expect(passkeyProblem("not an error")).toBe("that device could not be enrolled.");
   });
 });
 
