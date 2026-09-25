@@ -214,6 +214,7 @@ export class Unlocker {
   }
 
   accept(next: Uint8Array, step: StepPublic): void {
+    this.chain.fill(0);
     this.chain = next;
     this.seen.push({ salt: step.salt, questionNonce: step.questionNonce, questionCiphertext: step.questionCiphertext });
     this.step++;

@@ -3,7 +3,6 @@ package server
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"crypto/subtle"
 	"errors"
 	"net/http"
 	"strconv"
@@ -63,17 +62,18 @@ func (s *Server) prelogin(w http.ResponseWriter, r *http.Request) error {
 	if !s.loginByIP.allow("pre:" + limiterKey(s.clientIP(r))) {
 		return fail(http.StatusTooManyRequests, "too many attempts; try again in a few minutes")
 	}
-	u, err := s.store.UserByName(r.Context(), username)
-	if errors.Is(err, store.ErrNotFound) {
-		mac := hmac.New(sha256.New, s.cfg.Secret)
-		mac.Write([]byte("decoy:" + username))
-		writeJSON(w, http.StatusOK, map[string]any{"kdf": defaultKDF, "kdfSalt": mac.Sum(nil)[:16]})
-		return nil
-	}
+	u, found, err := s.store.UserByNameOrDecoy(r.Context(), username)
 	if err != nil {
 		return err
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"kdf": u.KDF, "kdfSalt": u.KDFSalt})
+	salt := u.KDFSalt
+	if !found {
+		// Stable per username, so a miss cannot be spotted by comparing salts.
+		mac := hmac.New(sha256.New, s.cfg.Secret)
+		mac.Write([]byte("decoy:" + username))
+		salt = mac.Sum(nil)[:16]
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"kdf": u.KDF, "kdfSalt": salt})
 	return nil
 }
 
@@ -109,7 +109,7 @@ func (e enrollmentJSON) parse() (store.Enrollment, error) {
 	if err != nil {
 		return out, err
 	}
-	out.AuthHash = sha(authKey)
+	out.AuthKey = authKey
 	if out.WrappedKey, err = b64("wrappedKey", e.WrappedKey, 48); err != nil {
 		return out, err
 	}
@@ -137,7 +137,7 @@ func (e enrollmentJSON) parse() (store.Enrollment, error) {
 		if err != nil {
 			return out, err
 		}
-		step.ProofHash = sha(proof)
+		step.Proof = proof
 		out.Steps[i] = step
 	}
 	return out, nil
@@ -184,8 +184,6 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-var decoyAuthHash = sha([]byte("tuck-decoy-auth"))
-
 func (s *Server) login(w http.ResponseWriter, r *http.Request) error {
 	var body struct {
 		Username string `json:"username"`
@@ -209,17 +207,14 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) error {
 		s.audit(r, "login_failed")
 		return fail(http.StatusUnauthorized, "wrong username or password")
 	}
-	u, err := s.store.UserByName(r.Context(), username)
-	expected := decoyAuthHash
-	if err == nil {
-		expected = u.AuthHash
-	} else if !errors.Is(err, store.ErrNotFound) {
+	u, found, err := s.store.UserByNameOrDecoy(r.Context(), username)
+	if err != nil {
 		return err
 	}
-	if (u == nil || !s.knownDevice(r, u.ID)) && !s.loginByUser.allow(username) {
+	if (!found || !s.knownDevice(r, u.ID)) && !s.loginByUser.allow(username) {
 		return fail(http.StatusTooManyRequests, "too many attempts; try again in a few minutes")
 	}
-	if subtle.ConstantTimeCompare(sha(authKey), expected) != 1 || u == nil {
+	if !s.store.AuthMatches(u, authKey) || !found {
 		s.audit(r, "login_failed")
 		return fail(http.StatusUnauthorized, "wrong username or password")
 	}
@@ -321,7 +316,7 @@ func (s *Server) unlockAnswer(w http.ResponseWriter, r *http.Request) error {
 		return fail(http.StatusConflict, "questions must be answered in order; start again from the first")
 	}
 	userID := a.session.UserID
-	res, err := s.store.CheckAnswer(r.Context(), userID, body.Step, sha(proof), s.cfg.Lockout)
+	res, err := s.store.CheckAnswer(r.Context(), userID, body.Step, proof, s.cfg.Lockout)
 	if err != nil {
 		return err
 	}
@@ -415,7 +410,7 @@ func (s *Server) rekey(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	if subtle.ConstantTimeCompare(sha(current), u.AuthHash) != 1 {
+	if !s.store.AuthMatches(u, current) {
 		s.audit(r, "rekey_refused")
 		if !s.rekeyTries.allow(string(a.tokenHash)) {
 			if err := s.store.DeleteSession(r.Context(), a.tokenHash); err != nil {

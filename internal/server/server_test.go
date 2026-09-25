@@ -23,6 +23,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/DimwitLabs/tuck/internal/keys"
+
 	"github.com/DimwitLabs/tuck/internal/store"
 )
 
@@ -35,7 +37,11 @@ func newTestServer(t *testing.T, opts ...func(*Config)) (*httptest.Server, strin
 	}
 	schema := fmt.Sprintf("tuck_test_%x", rnd(6))
 	ctx := context.Background()
-	st, err := store.Open(ctx, url, schema)
+	k, err := keys.New(bytes.Repeat([]byte{7}, 32))
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := store.Open(ctx, url, schema, k)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,6 +148,21 @@ func (c *client) do(method, path string, body any, csrf bool) (int, map[string]a
 		out["raw"] = raw
 	}
 	return res.StatusCode, out, res.Header
+}
+
+// What the jar is holding for this server right now, "" once the server has cleared it.
+func (c *client) cookie(name string) string {
+	c.t.Helper()
+	base, err := url.Parse(c.base)
+	if err != nil {
+		c.t.Fatal(err)
+	}
+	for _, ck := range c.http.Jar.Cookies(base) {
+		if ck.Name == name {
+			return ck.Value
+		}
+	}
+	return ""
 }
 
 func (c *client) call(method, path string, body any) (int, map[string]any) {

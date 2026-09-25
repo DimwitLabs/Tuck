@@ -17,6 +17,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/DimwitLabs/tuck/internal/keys"
 	"github.com/DimwitLabs/tuck/internal/server"
 	"github.com/DimwitLabs/tuck/internal/store"
 	"github.com/DimwitLabs/tuck/web"
@@ -53,6 +54,53 @@ func envInt(key string, fallback int) (int, error) {
 		return 0, fmt.Errorf("%s must be a positive whole number, not %q", key, v)
 	}
 	return n, nil
+}
+
+// The secret stays out of the database it protects: a stolen dump is inert
+// without it.
+func loadKeys() (*keys.Keys, error) {
+	raw := os.Getenv("TUCK_SECRET")
+	if raw == "" && os.Getenv("TUCK_SECRET_FILE") != "" {
+		b, err := os.ReadFile(os.Getenv("TUCK_SECRET_FILE"))
+		if err != nil {
+			return nil, fmt.Errorf("TUCK_SECRET_FILE: %w", err)
+		}
+		raw = string(b)
+	}
+	if raw == "" {
+		return nil, errors.New("TUCK_SECRET is required; generate one with: openssl rand -hex 32\n" +
+			"keep it outside the database and back it up separately — losing it makes every vault unopenable")
+	}
+	secret, err := keys.ParseSecret(raw)
+	if err != nil {
+		return nil, fmt.Errorf("TUCK_SECRET: %w; generate one with: openssl rand -hex 32", err)
+	}
+	return keys.New(secret)
+}
+
+func unfreeze(username string) int {
+	ctx := context.Background()
+	k, err := loadKeys()
+	if err != nil {
+		slog.Error("unfreeze", "err", err)
+		return 1
+	}
+	st, err := store.Open(ctx, os.Getenv("TUCK_DATABASE_URL"), env("TUCK_DB_SCHEMA", "tuck"), k)
+	if err != nil {
+		slog.Error("unfreeze", "err", err)
+		return 1
+	}
+	defer st.Close()
+	switch err := st.Unfreeze(ctx, strings.ToLower(strings.TrimSpace(username))); {
+	case errors.Is(err, store.ErrNotFound):
+		slog.Error("unfreeze", "err", "no such user", "username", username)
+		return 1
+	case err != nil:
+		slog.Error("unfreeze", "err", err)
+		return 1
+	}
+	slog.Info("unfrozen", "username", username)
+	return 0
 }
 
 func run() error {
@@ -113,16 +161,18 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	k, err := loadKeys()
+	if err != nil {
+		return err
+	}
+
 	schema := env("TUCK_DB_SCHEMA", "tuck")
-	st, err := store.Open(ctx, databaseURL, schema)
+	st, err := store.Open(ctx, databaseURL, schema, k)
 	if err != nil {
 		return err
 	}
 	defer st.Close()
-	secret, err := st.Secret(ctx, "server")
-	if err != nil {
-		return err
-	}
+	secret := k.Cookie()
 
 	srv := server.New(st, server.Config{
 		Features:       features,
@@ -205,6 +255,13 @@ func main() {
 	}
 	if len(os.Args) > 1 && os.Args[1] == "assets" {
 		os.Exit(assets())
+	}
+	if len(os.Args) > 1 && os.Args[1] == "unfreeze" {
+		if len(os.Args) != 3 {
+			slog.Error("usage: tuck unfreeze <username>")
+			os.Exit(1)
+		}
+		os.Exit(unfreeze(os.Args[2]))
 	}
 	if err := run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("tuck stopped", "err", err)

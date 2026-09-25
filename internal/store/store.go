@@ -8,11 +8,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/DimwitLabs/tuck/internal/keys"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -20,16 +23,26 @@ var ErrNotFound = errors.New("not found")
 type Store struct {
 	pool   *pgxpool.Pool
 	schema string
+	keys   *keys.Keys
+	decoy  *User
 }
 
 // Every query names the schema explicitly: transaction poolers such as Supabase's drop search_path.
-func Open(ctx context.Context, databaseURL, schema string) (*Store, error) {
+func Open(ctx context.Context, databaseURL, schema string, k *keys.Keys) (*Store, error) {
 	pool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("connect: %w", err)
 	}
-	s := &Store{pool: pool, schema: pgx.Identifier{schema}.Sanitize()}
+	s := &Store{pool: pool, schema: pgx.Identifier{schema}.Sanitize(), keys: k}
 	if err := s.migrate(ctx); err != nil {
+		pool.Close()
+		return nil, err
+	}
+	if err := s.buildDecoy(); err != nil {
+		pool.Close()
+		return nil, err
+	}
+	if err := s.checkCanary(ctx); err != nil {
 		pool.Close()
 		return nil, err
 	}
@@ -73,17 +86,56 @@ func (s *Store) migrate(ctx context.Context) error {
 	return tx.Commit(ctx)
 }
 
-func (s *Store) Secret(ctx context.Context, name string) ([]byte, error) {
-	fresh := make([]byte, 32)
-	if _, err := rand.Read(fresh); err != nil {
-		return nil, err
+var ErrWrongSecret = errors.New("TUCK_SECRET does not match this database")
+
+const canaryPlaintext = "tuck-canary-v1"
+
+// A wrong or rotated secret should stop the server here, not surface later as
+// unlock failures nobody can explain.
+func (s *Store) checkCanary(ctx context.Context) error {
+	fresh, err := s.keys.Seal("tuck:canary:v1", []byte(canaryPlaintext))
+	if err != nil {
+		return err
 	}
-	var value []byte
-	err := s.pool.QueryRow(ctx, s.q(`
+	var stored []byte
+	if err := s.pool.QueryRow(ctx, s.q(`
 		INSERT INTO {s}.settings (key, value) VALUES ($1, $2)
 		ON CONFLICT (key) DO UPDATE SET key = EXCLUDED.key
-		RETURNING value`), name, fresh).Scan(&value)
-	return value, err
+		RETURNING value`), "canary", fresh).Scan(&stored); err != nil {
+		return err
+	}
+	opened, err := s.keys.Unseal("tuck:canary:v1", stored)
+	if err != nil || string(opened) != canaryPlaintext {
+		return ErrWrongSecret
+	}
+	return nil
+}
+
+func (s *Store) buildDecoy() error {
+	blank := make([]byte, 16)
+	if _, err := rand.Read(blank); err != nil {
+		return err
+	}
+	u := &User{ID: "00000000-0000-0000-0000-000000000000", KDF: KDF{}}
+	var err error
+	if u.KDFSalt, err = s.keys.Seal(userAAD(u.ID, "kdf_salt"), blank); err != nil {
+		return err
+	}
+	if u.WrappedKey, err = s.keys.Seal(userAAD(u.ID, "wrapped_key"), make([]byte, 48)); err != nil {
+		return err
+	}
+	if u.WrappedNonce, err = s.keys.Seal(userAAD(u.ID, "wrapped_nonce"), make([]byte, 12)); err != nil {
+		return err
+	}
+	u.AuthHash = s.keys.Verifier([]byte("tuck-decoy-auth"))
+	s.decoy = u
+	return nil
+}
+
+func userAAD(userID, field string) string { return "tuck:user:" + userID + ":" + field }
+
+func stepAAD(userID string, step int, field string) string {
+	return "tuck:step:" + userID + ":" + strconv.Itoa(step) + ":" + field
 }
 
 type KDF struct {
@@ -97,7 +149,7 @@ type Step struct {
 	Salt               []byte
 	QuestionNonce      []byte
 	QuestionCiphertext []byte
-	ProofHash          []byte
+	Proof              []byte
 }
 
 type User struct {
@@ -115,10 +167,59 @@ type User struct {
 type Enrollment struct {
 	KDF          KDF
 	KDFSalt      []byte
-	AuthHash     []byte
+	AuthKey      []byte
 	WrappedKey   []byte
 	WrappedNonce []byte
 	Steps        [3]Step
+}
+
+// Everything the browser needs to rebuild the key chain goes in sealed: salts,
+// questions and the wrapped vault key. Without them a dump cannot even run the
+// KDF, let alone test a guess against it.
+func (s *Store) sealEnrollment(userID string, e Enrollment) (Enrollment, error) {
+	var err error
+	if e.KDFSalt, err = s.keys.Seal(userAAD(userID, "kdf_salt"), e.KDFSalt); err != nil {
+		return e, err
+	}
+	if e.WrappedKey, err = s.keys.Seal(userAAD(userID, "wrapped_key"), e.WrappedKey); err != nil {
+		return e, err
+	}
+	if e.WrappedNonce, err = s.keys.Seal(userAAD(userID, "wrapped_nonce"), e.WrappedNonce); err != nil {
+		return e, err
+	}
+	e.AuthKey = s.keys.Verifier(e.AuthKey)
+	for i := range e.Steps {
+		step := e.Steps[i]
+		if step.Salt, err = s.keys.Seal(stepAAD(userID, i+1, "salt"), step.Salt); err != nil {
+			return e, err
+		}
+		if step.QuestionNonce, err = s.keys.Seal(stepAAD(userID, i+1, "question_nonce"), step.QuestionNonce); err != nil {
+			return e, err
+		}
+		if step.QuestionCiphertext, err = s.keys.Seal(stepAAD(userID, i+1, "question_ciphertext"), step.QuestionCiphertext); err != nil {
+			return e, err
+		}
+		step.Proof = s.keys.Verifier(step.Proof)
+		e.Steps[i] = step
+	}
+	return e, nil
+}
+
+func (s *Store) openUser(u *User) error {
+	var err error
+	if u.KDFSalt, err = s.keys.Unseal(userAAD(u.ID, "kdf_salt"), u.KDFSalt); err != nil {
+		return err
+	}
+	if u.WrappedKey, err = s.keys.Unseal(userAAD(u.ID, "wrapped_key"), u.WrappedKey); err != nil {
+		return err
+	}
+	u.WrappedNonce, err = s.keys.Unseal(userAAD(u.ID, "wrapped_nonce"), u.WrappedNonce)
+	return err
+}
+
+// AuthMatches compares a login's auth key against the stored verifier.
+func (s *Store) AuthMatches(u *User, authKey []byte) bool {
+	return subtle.ConstantTimeCompare(s.keys.Verifier(authKey), u.AuthHash) == 1
 }
 
 func (s *Store) CountUsers(ctx context.Context) (int, error) {
@@ -131,6 +232,10 @@ var ErrSignupClosed = errors.New("signup closed")
 
 func (s *Store) CreateUser(ctx context.Context, id, username string, e Enrollment) error {
 	kdf, err := json.Marshal(e.KDF)
+	if err != nil {
+		return err
+	}
+	e, err = s.sealEnrollment(id, e)
 	if err != nil {
 		return err
 	}
@@ -148,7 +253,7 @@ func (s *Store) CreateUser(ctx context.Context, id, username string, e Enrollmen
 		if _, err := tx.Exec(ctx, s.q(`
 			INSERT INTO {s}.users (id, username, kdf, kdf_salt, auth_hash, wrapped_key, wrapped_nonce)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`),
-			id, username, kdf, e.KDFSalt, e.AuthHash, e.WrappedKey, e.WrappedNonce); err != nil {
+			id, username, kdf, e.KDFSalt, e.AuthKey, e.WrappedKey, e.WrappedNonce); err != nil {
 			return err
 		}
 		return s.writeSteps(ctx, tx, id, e.Steps)
@@ -163,7 +268,7 @@ func (s *Store) writeSteps(ctx context.Context, tx pgx.Tx, userID string, steps 
 		if _, err := tx.Exec(ctx, s.q(`
 			INSERT INTO {s}.unlock_steps (user_id, step, salt, question_nonce, question_ciphertext, proof_hash)
 			VALUES ($1, $2, $3, $4, $5, $6)`),
-			userID, i+1, st.Salt, st.QuestionNonce, st.QuestionCiphertext, st.ProofHash); err != nil {
+			userID, i+1, st.Salt, st.QuestionNonce, st.QuestionCiphertext, st.Proof); err != nil {
 			return err
 		}
 	}
@@ -175,12 +280,16 @@ func (s *Store) Rekey(ctx context.Context, userID string, keepSession []byte, e 
 	if err != nil {
 		return err
 	}
+	e, err = s.sealEnrollment(userID, e)
+	if err != nil {
+		return err
+	}
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx, s.q(`
 			UPDATE {s}.users SET kdf = $2, kdf_salt = $3, auth_hash = $4, wrapped_key = $5, wrapped_nonce = $6,
 				failed_unlocks = 0, unlock_lockouts = 0, unlock_locked_until = NULL, updated_at = now()
 			WHERE id = $1`),
-			userID, kdf, e.KDFSalt, e.AuthHash, e.WrappedKey, e.WrappedNonce); err != nil {
+			userID, kdf, e.KDFSalt, e.AuthKey, e.WrappedKey, e.WrappedNonce); err != nil {
 			return err
 		}
 		if err := s.writeSteps(ctx, tx, userID, e.Steps); err != nil {
@@ -202,7 +311,10 @@ func (s *Store) scanUser(row pgx.Row) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return u, json.Unmarshal(kdf, &u.KDF)
+	if err := json.Unmarshal(kdf, &u.KDF); err != nil {
+		return nil, err
+	}
+	return u, s.openUser(u)
 }
 
 const userColumns = `id::text, username, kdf, kdf_salt, auth_hash, wrapped_key, wrapped_nonce, unlock_locked_until, unlock_frozen`
@@ -210,6 +322,26 @@ const userColumns = `id::text, username, kdf, kdf_salt, auth_hash, wrapped_key, 
 func (s *Store) UserByName(ctx context.Context, username string) (*User, error) {
 	return s.scanUser(s.pool.QueryRow(ctx, s.q(`SELECT `+userColumns+` FROM {s}.users WHERE username = $1`), username))
 }
+
+// UserByNameOrDecoy hands back a fabricated user when the name is unknown, run
+// through the same unsealing, so a miss costs what a hit costs.
+func (s *Store) UserByNameOrDecoy(ctx context.Context, username string) (*User, bool, error) {
+	u, err := s.UserByName(ctx, username)
+	if errors.Is(err, ErrNotFound) {
+		decoy := *s.decoy
+		if err := s.openUser(&decoy); err != nil {
+			return nil, false, err
+		}
+		decoy.KDF = defaultKDF
+		return &decoy, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return u, true, nil
+}
+
+var defaultKDF = KDF{Algorithm: "argon2id", Iterations: 3, MemoryKiB: 65536, Parallelism: 1}
 
 func (s *Store) UserByID(ctx context.Context, id string) (*User, error) {
 	return s.scanUser(s.pool.QueryRow(ctx, s.q(`SELECT `+userColumns+` FROM {s}.users WHERE id = $1`), id))
@@ -220,10 +352,20 @@ func (s *Store) Step(ctx context.Context, userID string, step int) (*Step, error
 	err := s.pool.QueryRow(ctx, s.q(`
 		SELECT salt, question_nonce, question_ciphertext, proof_hash
 		FROM {s}.unlock_steps WHERE user_id = $1 AND step = $2`), userID, step).
-		Scan(&st.Salt, &st.QuestionNonce, &st.QuestionCiphertext, &st.ProofHash)
+		Scan(&st.Salt, &st.QuestionNonce, &st.QuestionCiphertext, &st.Proof)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
+	if err != nil {
+		return nil, err
+	}
+	if st.Salt, err = s.keys.Unseal(stepAAD(userID, step, "salt"), st.Salt); err != nil {
+		return nil, err
+	}
+	if st.QuestionNonce, err = s.keys.Unseal(stepAAD(userID, step, "question_nonce"), st.QuestionNonce); err != nil {
+		return nil, err
+	}
+	st.QuestionCiphertext, err = s.keys.Unseal(stepAAD(userID, step, "question_ciphertext"), st.QuestionCiphertext)
 	return st, err
 }
 
@@ -241,8 +383,9 @@ type AnswerResult struct {
 	FreezesNext  bool
 }
 
-func (s *Store) CheckAnswer(ctx context.Context, userID string, step int, proofHash []byte, l Lockout) (AnswerResult, error) {
+func (s *Store) CheckAnswer(ctx context.Context, userID string, step int, proof []byte, l Lockout) (AnswerResult, error) {
 	var res AnswerResult
+	proofHash := s.keys.Verifier(proof)
 	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		var failures, lockouts int
 		var until *time.Time
@@ -287,6 +430,20 @@ func (s *Store) CheckAnswer(ctx context.Context, userID string, step int, proofH
 		return err
 	})
 	return res, err
+}
+
+// Unfreeze clears a freeze so an operator never has to reach for raw SQL.
+func (s *Store) Unfreeze(ctx context.Context, username string) error {
+	tag, err := s.pool.Exec(ctx, s.q(`
+		UPDATE {s}.users SET failed_unlocks = 0, unlock_lockouts = 0, unlock_locked_until = NULL,
+			unlock_frozen = false WHERE username = $1`), username)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (s *Store) ResetUnlockFailures(ctx context.Context, userID string) error {

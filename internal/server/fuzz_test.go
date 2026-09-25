@@ -101,11 +101,11 @@ func FuzzEnrollmentParse(f *testing.F) {
 		if err != nil {
 			return
 		}
-		if len(out.KDFSalt) != 16 || len(out.AuthHash) != 32 || len(out.WrappedKey) != 48 || len(out.WrappedNonce) != 12 {
+		if len(out.KDFSalt) != 16 || len(out.AuthKey) != 32 || len(out.WrappedKey) != 48 || len(out.WrappedNonce) != 12 {
 			t.Fatalf("accepted an enrollment with the wrong sizes: %+v", out)
 		}
 		for _, st := range out.Steps {
-			if len(st.Salt) != 16 || len(st.QuestionNonce) != 12 || len(st.ProofHash) != 32 ||
+			if len(st.Salt) != 16 || len(st.QuestionNonce) != 12 || len(st.Proof) != 32 ||
 				len(st.QuestionCiphertext) < 17 || len(st.QuestionCiphertext) > 1024 {
 				t.Fatalf("accepted a step with the wrong sizes: %+v", st)
 			}
