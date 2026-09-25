@@ -23,9 +23,17 @@ every fifth wrong answer pauses unlocking, twice as long each time:
 - a full unlock resets the count.
 - `TUCK_FREEZE_AFTER` changes how many pauses come before the freeze.
 
+nobody can do this to you from outside: answering questions needs a session, so an attacker would already need your password to spend a single wrong answer.
+
 ## frozen?
 
-whoever runs the database can lift it:
+whoever runs the instance can lift it:
+
+```bash
+docker compose exec tuck /tuck unfreeze <username>
+```
+
+or straight in the database:
 
 ```sql
 UPDATE tuck.users

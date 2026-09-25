@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: [
         "reference/configuration",
+        "reference/security",
         "reference/how-it-is-encrypted",
         "reference/threat-model",
         { type: "link", label: "changelog", href: "https://github.com/DimwitLabs/Tuck/blob/main/CHANGELOG.md" },

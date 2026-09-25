@@ -11,6 +11,7 @@
   --well: #eef1f5;
   --straw: #b4863a;
   --danger: #a3261c;
+  --night: 0;
   --serif: "Spectral", "Iowan Old Style", Georgia, serif;
   --mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
@@ -69,6 +70,7 @@
 }
 
 [data-theme="dark"] {
+  --night: 1;
   --ground: #0a0e13;
   --paper: #10161e;
   --edge: #1d2733;
@@ -475,4 +477,64 @@ div[class*="codeBlockContainer"] {
   .navbar-sidebar--show .navbar__items--right {
     visibility: hidden;
   }
+}
+
+.flick {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex: none;
+  width: 1.35rem;
+  height: 2.2rem;
+  padding: 0.18rem;
+  background: var(--well);
+  border: 1px solid var(--edge);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.flick:hover {
+  border-color: var(--line);
+}
+
+.flick .lever {
+  display: block;
+  height: 42%;
+  background: var(--muted);
+  transform: translateY(calc(var(--night) * 138%));
+  transition: transform 0.12s cubic-bezier(0.3, 1.6, 0.6, 1), background 0.12s ease;
+}
+
+.flick:hover .lever {
+  background: var(--ink);
+}
+
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin: 1.4rem 0 1.6rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--well);
+  border: 1px solid var(--edge);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.chain span {
+  padding: 0.3rem 0.55rem;
+  background: var(--paper);
+  border: 1px solid var(--edge);
+}
+
+.chain span.key {
+  color: var(--steel);
+  border-color: var(--steel-soft);
+}
+
+.chain em {
+  color: var(--muted);
+  font-style: normal;
 }

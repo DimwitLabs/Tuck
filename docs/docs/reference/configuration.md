@@ -11,6 +11,8 @@ everything goes in `.env`, next to the compose file. every setting has a sensibl
 
 | variable | default | |
 |---|---|---|
+| `TUCK_SECRET` | | **required.** `openssl rand -hex 32`. seals the salts, questions and wrapped key. keep it out of your database backups and [back it up separately](../using/backups.md#the-secret) |
+| `TUCK_SECRET_FILE` | | read the secret from a file instead, for docker secrets |
 | `TUCK_FEATURES` | `both` | `ssh`, `files` or `both` |
 | `TUCK_TRUSTED_PROXIES` | | your proxy's address or cidr range, comma-separated. required behind a proxy |
 | `TUCK_SECURE_COOKIES` | `true` | `false` only for local testing over plain http |
@@ -51,3 +53,9 @@ docker compose exec tuck /tuck assets
 ```
 
 prints the sha-256 of every file tuck serves, so you can check them against your own build. `/tuck healthcheck` is what docker's health check runs.
+
+```bash
+docker compose exec tuck /tuck unfreeze <username>
+```
+
+lifts a [frozen account](../using/unlocking.md#frozen).

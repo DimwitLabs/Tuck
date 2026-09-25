@@ -14,11 +14,14 @@ you need docker and a domain with https. that's it.
    cp .env.example .env
    ```
 
-2. set a database password in `.env`:
+2. set `TUCK_SECRET` and a database password in `.env`:
 
    ```bash
-   openssl rand -hex 24
+   openssl rand -hex 32    # TUCK_SECRET
+   openssl rand -hex 24    # POSTGRES_PASSWORD
    ```
+
+   `TUCK_SECRET` seals what's in the database. [back it up separately](../using/backups.md#the-secret) — lose it and every vault here is unopenable.
 
 3. start it:
 
