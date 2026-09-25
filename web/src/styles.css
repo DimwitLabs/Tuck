@@ -897,6 +897,18 @@ textarea.mono {
   font-size: 1.12rem;
 }
 
+.naming input {
+  font: inherit;
+  font-size: 1.12rem;
+  width: 100%;
+  padding: 0.1rem 0.3rem;
+  margin: -0.1rem -0.3rem;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+}
+
 .cmd {
   font-family: var(--mono);
   font-size: 0.8rem;

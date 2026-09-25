@@ -231,6 +231,30 @@ func (s *Server) listPasskeys(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (s *Server) renamePasskey(w http.ResponseWriter, r *http.Request) error {
+	a, err := s.unlocked(r)
+	if err != nil {
+		return err
+	}
+	id, err := base64.RawURLEncoding.DecodeString(r.PathValue("id"))
+	if err != nil {
+		return fail(http.StatusBadRequest, "that is not a device id")
+	}
+	var body struct {
+		Label string `json:"label"`
+	}
+	if err := readJSON(r, &body); err != nil {
+		return err
+	}
+	if err := s.store.RenamePasskey(r.Context(), a.session.UserID, id, deviceLabel(body.Label)); errors.Is(err, store.ErrNotFound) {
+		return fail(http.StatusNotFound, "that device is not enrolled")
+	} else if err != nil {
+		return err
+	}
+	s.audit(r, "passkey_renamed")
+	return s.listPasskeys(w, r)
+}
+
 func (s *Server) deletePasskey(w http.ResponseWriter, r *http.Request) error {
 	a, err := s.unlocked(r)
 	if err != nil {

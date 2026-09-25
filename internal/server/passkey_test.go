@@ -368,3 +368,47 @@ func TestExcludedDevicesAreOnlyEverOfferedAsLocalOnes(t *testing.T) {
 		t.Fatalf("android refuses the whole ceremony over an off-device transport, got %v", transports)
 	}
 }
+
+func TestADeviceCanBeGivenABetterName(t *testing.T) {
+	ts, schema := newTestServer(t, withOrigin("https://tuck.example.com"))
+	c := newClient(t, ts)
+	c.signup(newAccount("alex"))
+
+	_, b := c.call("GET", "/api/passkeys", nil)
+	userID := decodeHandle(t, b["userId"].(string))
+	dbExec(t, schema, fmt.Sprintf(
+		`INSERT INTO %s.passkeys (credential_id, user_id, public_key, aaguid, transports, label)
+		 VALUES ($1, $2, $3, $4, $5, $6)`, schema),
+		rnd(16), userID, rnd(32), rnd(16), []string{"internal"}, "this mac")
+
+	_, b = c.call("GET", "/api/passkeys", nil)
+	rows, _ := b["passkeys"].([]any)
+	id := rows[0].(map[string]any)["id"].(string)
+
+	s, b := c.call("PATCH", "/api/passkeys/"+id, map[string]any{"label": "  work laptop  "})
+	expect(t, s, 200, b)
+	rows, _ = b["passkeys"].([]any)
+	if rows[0].(map[string]any)["label"] != "work laptop" {
+		t.Fatalf("rename did not take: %v", rows[0])
+	}
+
+	s, b = c.call("PATCH", "/api/passkeys/"+id, map[string]any{"label": strings.Repeat("x", labelMax+10)})
+	expect(t, s, 200, b)
+	rows, _ = b["passkeys"].([]any)
+	if name, _ := rows[0].(map[string]any)["label"].(string); len([]rune(name)) != labelMax {
+		t.Fatalf("a long name should be cut to %d runes, got %d", labelMax, len([]rune(name)))
+	}
+
+	s, b = c.call("PATCH", "/api/passkeys/"+id, map[string]any{"label": ""})
+	expect(t, s, 200, b)
+	rows, _ = b["passkeys"].([]any)
+	if rows[0].(map[string]any)["label"] != "this device" {
+		t.Fatalf("an empty name falls back: %v", rows[0])
+	}
+
+	s, b = c.call("PATCH", "/api/passkeys/not-base64-@@@", map[string]any{"label": "nope"})
+	expect(t, s, 400, b)
+
+	s, b = c.call("PATCH", "/api/passkeys/"+base64.RawURLEncoding.EncodeToString(rnd(16)), map[string]any{"label": "nope"})
+	expect(t, s, 404, b)
+}

@@ -689,6 +689,14 @@ func (s *Store) PasskeyUsed(ctx context.Context, credentialID []byte, signCount 
 	return err
 }
 
+func (s *Store) RenamePasskey(ctx context.Context, userID string, credentialID []byte, label string) error {
+	tag, err := s.pool.Exec(ctx, s.q(`UPDATE {s}.passkeys SET label = $3 WHERE user_id = $1 AND credential_id = $2`), userID, credentialID, label)
+	if err == nil && tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return err
+}
+
 func (s *Store) DeletePasskey(ctx context.Context, userID string, credentialID []byte) error {
 	tag, err := s.pool.Exec(ctx, s.q(`DELETE FROM {s}.passkeys WHERE user_id = $1 AND credential_id = $2`), userID, credentialID)
 	if err == nil && tag.RowsAffected() == 0 {

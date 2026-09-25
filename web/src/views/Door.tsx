@@ -26,6 +26,7 @@ export function Door() {
   const [supported, setSupported] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [naming, setNaming] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -49,15 +50,28 @@ export function Door() {
       const options = creationOptions((await api.passkeyStart()) as never);
       const credential = await createPasskey(options);
       if (!credential) return;
+      const known = new Set((rows ?? []).map((r) => r.id));
       const res = await api.passkeyFinish(deviceName(), credentialJSON(credential));
       rememberDevice();
       setRows(res.passkeys);
+      setNaming(res.passkeys.find((r) => !known.has(r.id))?.id ?? null);
       void accepted(res.userId, res.passkeys);
     } catch (err) {
       const problem = err instanceof DOMException ? passkeyProblem(err) : errorMessage(err);
       if (problem) setError(problem);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const rename = async (row: PasskeyRow, label: string) => {
+    setNaming(null);
+    if (label.trim() === row.label) return;
+    try {
+      const res = await api.passkeyRename(row.id, label);
+      setRows(res.passkeys);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 
@@ -108,12 +122,27 @@ export function Door() {
         <ul className="register">
           {rows.map((row) => (
             <li key={row.id} className="entry">
-              <h3>{row.label}</h3>
+              {naming === row.id ? (
+                <form
+                  className="naming"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void rename(row, new FormData(e.currentTarget).get("label") as string);
+                  }}
+                >
+                  <input name="label" aria-label="what to call this device" defaultValue={row.label} maxLength={40} autoFocus onBlur={(e) => void rename(row, e.target.value)} />
+                </form>
+              ) : (
+                <h3>{row.label}</h3>
+              )}
               <p className="detail">
                 <span>enrolled {when(row.added)}</span>
                 <span>last opened the door {when(row.lastUsed)}</span>
               </p>
               <div className="ops">
+                <button type="button" className="act" onClick={() => setNaming(row.id)}>
+                  rename
+                </button>
                 <button type="button" className="act danger" onClick={() => void forget(row)}>
                   forget
                 </button>

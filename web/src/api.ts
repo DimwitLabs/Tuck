@@ -97,6 +97,7 @@ export const api = {
   passkeys: () => request<PasskeyList>("GET", "/api/passkeys"),
   passkeyStart: () => request<Record<string, unknown>>("POST", "/api/passkeys/start"),
   passkeyFinish: (label: string, credential: unknown) => request<PasskeyList>("POST", `/api/passkeys/finish?label=${encodeURIComponent(label)}`, credential),
+  passkeyRename: (id: string, label: string) => request<PasskeyList>("PATCH", `/api/passkeys/${id}`, { label }),
   passkeyForget: (id: string) => request<PasskeyList>("DELETE", `/api/passkeys/${id}`),
   gatePasskeyStart: () => request<Record<string, unknown>>("POST", "/api/gate/passkey/start"),
   gatePasskeyFinish: (credential: unknown) => request<{ open: boolean }>("POST", "/api/gate/passkey/finish", credential),

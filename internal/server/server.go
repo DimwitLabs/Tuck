@@ -117,6 +117,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/passkeys", s.wrap(s.listPasskeys))
 	mux.HandleFunc("POST /api/passkeys/start", s.wrap(s.beginPasskey))
 	mux.HandleFunc("POST /api/passkeys/finish", s.wrap(s.finishPasskey))
+	mux.HandleFunc("PATCH /api/passkeys/{id}", s.wrap(s.renamePasskey))
 	mux.HandleFunc("DELETE /api/passkeys/{id}", s.wrap(s.deletePasskey))
 	mux.HandleFunc("POST /api/signup", s.bounded(s.wrap(s.signup)))
 	mux.HandleFunc("POST /api/login", s.bounded(s.wrap(s.login)))
