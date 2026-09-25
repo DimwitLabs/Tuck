@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { canEnrol, creationOptions, credentialJSON, deviceEnrolled, deviceName, forgetDevice, passkeyProblem, requestOptions, rememberDevice } from "./passkey";
+import { canEnrol, createPasskey, creationOptions, credentialJSON, deviceEnrolled, deviceName, forgetDevice, passkeyProblem, requestOptions, rememberDevice } from "./passkey";
 
 const b64u = (s: string) => btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const bytes = (b: ArrayBuffer) => String.fromCharCode(...new Uint8Array(b));
@@ -133,6 +133,35 @@ describe("canEnrol", () => {
   });
 });
 
+describe("createPasskey", () => {
+  const options = { challenge: new Uint8Array(4), excludeCredentials: [{ id: new Uint8Array(2), type: "public-key" }], hints: ["client-device"] } as unknown as PublicKeyCredentialCreationOptions;
+  const refuse = (name: string) => () => Promise.reject(new DOMException("no", name));
+
+  it("asks once when the device answers", async () => {
+    const create = vi.fn(async () => "credential");
+    vi.stubGlobal("navigator", { credentials: { create } });
+    expect(await createPasskey(options)).toBe("credential");
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it("tries again without the exclusion list when android's credential manager balks", async () => {
+    const create = vi.fn().mockImplementationOnce(refuse("NotReadableError")).mockResolvedValueOnce("credential");
+    vi.stubGlobal("navigator", { credentials: { create } });
+    expect(await createPasskey(options)).toBe("credential");
+    const second = create.mock.calls[1][0].publicKey;
+    expect(second.excludeCredentials).toBeUndefined();
+    expect(second.hints).toBeUndefined();
+    expect(second.challenge).toBe(options.challenge);
+  });
+
+  it("lets every other refusal through untouched", async () => {
+    const create = vi.fn().mockImplementation(refuse("NotAllowedError"));
+    vi.stubGlobal("navigator", { credentials: { create } });
+    await expect(createPasskey(options)).rejects.toThrow();
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("passkeyProblem", () => {
   it("stays quiet when the person just cancelled", () => {
     expect(passkeyProblem(Object.assign(new Error(), { name: "NotAllowedError" }))).toBeNull();
@@ -144,6 +173,14 @@ describe("passkeyProblem", () => {
     expect(passkeyProblem(Object.assign(new Error(), { name: "SecurityError" }))).toMatch(/address/);
     expect(passkeyProblem(Object.assign(new Error(), { name: "NotSupportedError" }))).toMatch(/kind of passkey/);
     expect(passkeyProblem(Object.assign(new Error(), { name: "ConstraintError" }))).toMatch(/screen lock/);
+    expect(passkeyProblem(Object.assign(new Error(), { name: "NotReadableError" }))).toMatch(/passkey service/);
+    expect(passkeyProblem(Object.assign(new Error(), { name: "NotSupportedError" }))).toMatch(/kind of passkey/);
+    expect(passkeyProblem(Object.assign(new Error(), { name: "ConstraintError" }))).toMatch(/screen lock/);
+  });
+
+  it("names the ones it has no words for, so a report says something", () => {
+    expect(passkeyProblem(Object.assign(new Error(), { name: "UnknownError" }))).toMatch(/could not be enrolled \(UnknownError\)/);
+    expect(passkeyProblem("not an error")).toBe("that device could not be enrolled.");
   });
 
   it("names the ones it has no words for, so a report says something", () => {

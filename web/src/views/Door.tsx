@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { api, type PasskeyRow } from "../api";
-import { canEnrol, creationOptions, credentialJSON, deviceName, forgetDevice, passkeyProblem, rememberDevice } from "../passkey";
+import { canEnrol, createPasskey, creationOptions, credentialJSON, deviceName, forgetDevice, passkeyProblem, rememberDevice } from "../passkey";
 import { Board, ErrorNote, errorMessage, Spinner } from "./ui";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "not yet");
@@ -47,7 +47,7 @@ export function Door() {
     setError(null);
     try {
       const options = creationOptions((await api.passkeyStart()) as never);
-      const credential = (await navigator.credentials.create({ publicKey: options })) as PublicKeyCredential | null;
+      const credential = await createPasskey(options);
       if (!credential) return;
       const res = await api.passkeyFinish(deviceName(), credentialJSON(credential));
       rememberDevice();

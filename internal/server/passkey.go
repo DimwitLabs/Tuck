@@ -102,6 +102,18 @@ func (s *Server) passkeyUser(r *http.Request, userID string) (*passkeyUser, erro
 	return user, nil
 }
 
+// Android's credential manager refuses a whole registration when something in
+// the exclusion list claims a transport it would have to leave the device for.
+func onThisDevice(in []protocol.AuthenticatorTransport) []protocol.AuthenticatorTransport {
+	out := make([]protocol.AuthenticatorTransport, 0, len(in))
+	for _, t := range in {
+		if t == protocol.Internal {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
 func (s *Server) passkeysOn() error {
 	if s.auth == nil {
 		return fail(http.StatusNotFound, "passkeys are off; set TUCK_ORIGIN to turn them on")
@@ -126,7 +138,9 @@ func (s *Server) beginPasskey(w http.ResponseWriter, r *http.Request) error {
 	}
 	exclude := make([]protocol.CredentialDescriptor, 0, len(user.creds))
 	for _, c := range user.creds {
-		exclude = append(exclude, c.Descriptor())
+		d := c.Descriptor()
+		d.Transport = onThisDevice(d.Transport)
+		exclude = append(exclude, d)
 	}
 	creation, session, err := s.auth.BeginRegistration(user,
 		webauthn.WithExclusions(exclude),

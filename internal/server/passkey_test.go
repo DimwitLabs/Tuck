@@ -343,3 +343,28 @@ func TestDoorStaysShutForRubbishPasskeys(t *testing.T) {
 		t.Fatalf("the door should still be shut: %v", b)
 	}
 }
+
+func TestExcludedDevicesAreOnlyEverOfferedAsLocalOnes(t *testing.T) {
+	ts, schema := newTestServer(t, withOrigin("https://tuck.example.com"))
+	c := newClient(t, ts)
+	c.signup(newAccount("alex"))
+
+	_, b := c.call("GET", "/api/passkeys", nil)
+	userID := decodeHandle(t, b["userId"].(string))
+	dbExec(t, schema, fmt.Sprintf(
+		`INSERT INTO %s.passkeys (credential_id, user_id, public_key, aaguid, transports, label)
+		 VALUES ($1, $2, $3, $4, $5, $6)`, schema),
+		rnd(16), userID, rnd(32), rnd(16), []string{"internal", "hybrid", "usb"}, "this mac")
+
+	s, b := c.call("POST", "/api/passkeys/start", nil)
+	expect(t, s, 200, b)
+	exclude, _ := b["excludeCredentials"].([]any)
+	if len(exclude) != 1 {
+		t.Fatalf("the enrolled device should be excluded: %v", b["excludeCredentials"])
+	}
+	first, _ := exclude[0].(map[string]any)
+	transports, _ := first["transports"].([]any)
+	if len(transports) != 1 || transports[0] != "internal" {
+		t.Fatalf("android refuses the whole ceremony over an off-device transport, got %v", transports)
+	}
+}

@@ -106,6 +106,20 @@ export async function canEnrol(): Promise<boolean> {
   return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
 }
 
+// Android's credential manager can fail the whole ceremony over the exclusion
+// list or the hint, so a plainer second attempt is worth one try.
+export async function createPasskey(options: PublicKeyCredentialCreationOptions): Promise<PublicKeyCredential | null> {
+  try {
+    return (await navigator.credentials.create({ publicKey: options })) as PublicKeyCredential | null;
+  } catch (err) {
+    if (!(err instanceof DOMException) || err.name !== "NotReadableError") throw err;
+    const plainer: Record<string, unknown> = { ...options };
+    delete plainer.excludeCredentials;
+    delete plainer.hints;
+    return (await navigator.credentials.create({ publicKey: plainer as unknown as PublicKeyCredentialCreationOptions })) as PublicKeyCredential | null;
+  }
+}
+
 // A cancelled dialog is not a failure worth a message; everything else is.
 export function passkeyProblem(err: unknown): string | null {
   const name = err instanceof Error ? err.name : "";
@@ -114,5 +128,6 @@ export function passkeyProblem(err: unknown): string | null {
   if (name === "SecurityError") return "this address doesn't match the one tuck is configured with.";
   if (name === "NotSupportedError") return "this device can't make the kind of passkey tuck asks for.";
   if (name === "ConstraintError") return "this device needs a screen lock before it can hold a passkey.";
+  if (name === "NotReadableError") return "this device's passkey service wouldn't answer. check its screen lock and password manager, then try again.";
   return name ? `that device could not be enrolled (${name}).` : "that device could not be enrolled.";
 }
