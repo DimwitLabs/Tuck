@@ -481,11 +481,12 @@ div[class*="codeBlockContainer"] {
 
 .flick {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: flex-start;
   flex: none;
-  width: 1.35rem;
-  height: 2.2rem;
+  width: 2.4rem;
+  height: 1.5rem;
+  margin-left: 1rem;
   padding: 0.18rem;
   background: var(--well);
   border: 1px solid var(--edge);
@@ -499,9 +500,9 @@ div[class*="codeBlockContainer"] {
 
 .flick .lever {
   display: block;
-  height: 42%;
+  width: 42%;
   background: var(--muted);
-  transform: translateY(calc(var(--night) * 138%));
+  transform: translateX(calc(var(--night) * 138%));
   transition: transform 0.12s cubic-bezier(0.3, 1.6, 0.6, 1), background 0.12s ease;
 }
 
