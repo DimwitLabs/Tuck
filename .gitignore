@@ -8,3 +8,4 @@ web/dist/*
 docs/node_modules/
 docs/build/
 docs/.docusaurus/
+cover.out

@@ -59,7 +59,19 @@ jobs:
       - run: test -z "$(gofmt -l .)"
       - run: go vet ./...
       - run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
-      - run: go test -race ./...
+      - run: go test -race ./... -coverpkg=./internal/... -coverprofile=cover.out
+      - name: Check Coverage
+        run: |
+          go tool cover -func=cover.out | tail -1
+          total=$(go tool cover -func=cover.out | awk 'END { gsub("%", "", $3); print $3 }')
+          badge=$(grep -o 'coverage-[0-9]*%25' README.md | head -1 | sed 's/coverage-//; s/%25//')
+          awk -v total="$total" -v floor="$COVERAGE_FLOOR" -v badge="$badge" 'BEGIN {
+            if (badge + 0 != floor + 0) { printf "the readme badge says %s%% but the floor is %s%%\n", badge, floor; exit 1 }
+            if (total + 0 < floor + 0) { printf "coverage %s%% is below the %s%% floor\n", total, floor; exit 1 }
+            printf "coverage %s%% clears the %s%% floor\n", total, floor
+          }'
+        env:
+          COVERAGE_FLOOR: 85
 
   image:
     name: Image
