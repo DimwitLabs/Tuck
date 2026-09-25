@@ -59,33 +59,6 @@ export function credentialJSON(credential: PublicKeyCredential): unknown {
   };
 }
 
-// The door must look blank to a stranger, so only a browser that enrolled here knows to ask for a passkey at all.
-const ENROLLED = "tuck.device";
-
-export const rememberDevice = () => {
-  try {
-    localStorage.setItem(ENROLLED, "1");
-  } catch {
-    // storage blocked: the long press still works
-  }
-};
-
-export const forgetDevice = () => {
-  try {
-    localStorage.removeItem(ENROLLED);
-  } catch {
-    // nothing to forget
-  }
-};
-
-export const deviceEnrolled = () => {
-  try {
-    return localStorage.getItem(ENROLLED) === "1";
-  } catch {
-    return false;
-  }
-};
-
 const DEVICES: [RegExp, string][] = [
   [/iphone/i, "this iphone"],
   [/ipad/i, "this ipad"],

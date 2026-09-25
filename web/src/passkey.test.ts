@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { canEnrol, createPasskey, creationOptions, credentialJSON, deviceEnrolled, deviceName, forgetDevice, passkeyProblem, requestOptions, rememberDevice } from "./passkey";
+import { canEnrol, createPasskey, creationOptions, credentialJSON, deviceName, passkeyProblem, requestOptions } from "./passkey";
 
 const b64u = (s: string) => btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const bytes = (b: ArrayBuffer) => String.fromCharCode(...new Uint8Array(b));
@@ -193,43 +193,7 @@ describe("passkeyProblem", () => {
 });
 
 describe("this device", () => {
-  const store = new Map<string, string>();
-
-  beforeEach(() => {
-    store.clear();
-    vi.stubGlobal("localStorage", {
-      getItem: (k: string) => store.get(k) ?? null,
-      setItem: (k: string, v: string) => void store.set(k, v),
-      removeItem: (k: string) => void store.delete(k),
-    });
-  });
-
   afterEach(() => vi.unstubAllGlobals());
-
-  it("remembers and forgets that this browser enrolled", () => {
-    expect(deviceEnrolled()).toBe(false);
-    rememberDevice();
-    expect(deviceEnrolled()).toBe(true);
-    forgetDevice();
-    expect(deviceEnrolled()).toBe(false);
-  });
-
-  it("never throws when storage is blocked", () => {
-    vi.stubGlobal("localStorage", {
-      getItem: () => {
-        throw new Error("blocked");
-      },
-      setItem: () => {
-        throw new Error("blocked");
-      },
-      removeItem: () => {
-        throw new Error("blocked");
-      },
-    });
-    expect(() => rememberDevice()).not.toThrow();
-    expect(() => forgetDevice()).not.toThrow();
-    expect(deviceEnrolled()).toBe(false);
-  });
 
   it("names the device after the machine it runs on", () => {
     for (const [ua, want] of [

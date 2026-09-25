@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState, type SyntheticEvent } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { api } from "../api";
-import { credentialJSON, deviceEnrolled, requestOptions } from "../passkey";
+import { credentialJSON, requestOptions } from "../passkey";
 
 interface Props {
   word: string;
@@ -45,8 +45,8 @@ export function Gate({ word, notice, onOpen }: Props) {
 
   const refuse = (e: SyntheticEvent) => e.preventDefault();
 
-  // Nothing on the door says a passkey exists. A browser that enrolled one is asked on arrival; anyone else holds the word.
-  const askForPasskey = useCallback(async () => {
+  // Nothing on the door says a passkey exists, and nothing asks for one until someone holds the page down. An unprompted dialog would announce tuck to whoever is watching.
+  const askForPasskey = async () => {
     if (typeof PublicKeyCredential === "undefined" || !window.isSecureContext || opened.current) return;
     try {
       const options = requestOptions((await api.gatePasskeyStart()) as never);
@@ -62,11 +62,7 @@ export function Gate({ word, notice, onOpen }: Props) {
     } finally {
       if (!opened.current && !touch) field.current?.focus();
     }
-  }, [onOpen]);
-
-  useEffect(() => {
-    if (deviceEnrolled()) void askForPasskey();
-  }, [askForPasskey]);
+  };
 
   const holding = (down: boolean) => {
     if (!down) {

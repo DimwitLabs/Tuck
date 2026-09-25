@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { api, type PasskeyRow } from "../api";
-import { canEnrol, createPasskey, creationOptions, credentialJSON, deviceName, forgetDevice, passkeyProblem, rememberDevice } from "../passkey";
+import { canEnrol, createPasskey, creationOptions, credentialJSON, deviceName, passkeyProblem } from "../passkey";
 import { Board, ErrorNote, errorMessage, Spinner } from "./ui";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "not yet");
@@ -52,7 +52,6 @@ export function Door() {
       if (!credential) return;
       const known = new Set((rows ?? []).map((r) => r.id));
       const res = await api.passkeyFinish(deviceName(), credentialJSON(credential));
-      rememberDevice();
       setRows(res.passkeys);
       setNaming(res.passkeys.find((r) => !known.has(r.id))?.id ?? null);
       void accepted(res.userId, res.passkeys);
@@ -79,7 +78,6 @@ export function Door() {
     if (!confirm(`${row.label} will have to type the word again. forget it?`)) return;
     try {
       const res = await api.passkeyForget(row.id);
-      if (res.passkeys.length === 0) forgetDevice();
       setRows(res.passkeys);
       void accepted(res.userId, res.passkeys);
     } catch (err) {
@@ -101,7 +99,8 @@ export function Door() {
         <>
           <p className="lede muted">
             the door is the word you type before tuck shows a login page. it hides tuck from everyone who doesn't know it, and it is not your password. enrol a
-            device and that device opens the door with its own fingerprint, face or pin instead. logging in does not change, you still need your password and
+            device and that device opens the door with its own fingerprint, face or pin instead: press and hold anywhere on the door for a moment and it asks.
+            nothing there asks on its own, so a passing glance sees the same blank page as always. logging in does not change, you still need your password and
             your three answers.
           </p>
           <ErrorNote error={error} />
