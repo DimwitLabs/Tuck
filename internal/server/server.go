@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-webauthn/webauthn/webauthn"
+
 	"github.com/DimwitLabs/tuck/internal/store"
 )
 
@@ -49,6 +51,7 @@ type Config struct {
 	Secret         []byte
 	GatePassword   string
 	GateWord       string
+	Origin         string
 }
 
 type Server struct {
@@ -61,10 +64,15 @@ type Server struct {
 	answerByIP  *limiter
 	gateByIP    *limiter
 	rekeyTries  *limiter
+	auth        *webauthn.WebAuthn
 	public      chan struct{}
 }
 
-func New(st *store.Store, cfg Config, static fs.FS) *Server {
+func New(st *store.Store, cfg Config, static fs.FS) (*Server, error) {
+	auth, err := newWebAuthn(cfg.Origin, cfg.GateWord)
+	if err != nil {
+		return nil, err
+	}
 	return &Server{
 		store:       st,
 		cfg:         cfg,
@@ -75,8 +83,9 @@ func New(st *store.Store, cfg Config, static fs.FS) *Server {
 		answerByIP:  newLimiter(60, 15*time.Minute),
 		gateByIP:    newLimiter(300, 15*time.Minute),
 		rekeyTries:  newLimiter(5, time.Hour),
+		auth:        auth,
 		public:      make(chan struct{}, publicSlots),
-	}
+	}, nil
 }
 
 func (s *Server) Janitor(ctx context.Context) {
@@ -103,6 +112,12 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/status", s.bounded(s.wrap(s.status)))
 	mux.HandleFunc("GET /api/prelogin", s.bounded(s.wrap(s.prelogin)))
 	mux.HandleFunc("POST /api/gate", s.bounded(s.wrap(s.gate)))
+	mux.HandleFunc("POST /api/gate/passkey/start", s.bounded(s.wrap(s.gatePasskeyStart)))
+	mux.HandleFunc("POST /api/gate/passkey/finish", s.bounded(s.wrap(s.gatePasskeyFinish)))
+	mux.HandleFunc("GET /api/passkeys", s.wrap(s.listPasskeys))
+	mux.HandleFunc("POST /api/passkeys/start", s.wrap(s.beginPasskey))
+	mux.HandleFunc("POST /api/passkeys/finish", s.wrap(s.finishPasskey))
+	mux.HandleFunc("DELETE /api/passkeys/{id}", s.wrap(s.deletePasskey))
 	mux.HandleFunc("POST /api/signup", s.bounded(s.wrap(s.signup)))
 	mux.HandleFunc("POST /api/login", s.bounded(s.wrap(s.login)))
 	mux.HandleFunc("POST /api/logout", s.wrap(s.logout))

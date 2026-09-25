@@ -64,4 +64,19 @@ CREATE TABLE {s}.settings (
 	`ALTER TABLE {s}.users ADD COLUMN unlock_frozen boolean NOT NULL DEFAULT false`,
 	`ALTER TABLE {s}.items DROP CONSTRAINT items_kind_check;
 ALTER TABLE {s}.items ADD CONSTRAINT items_kind_check CHECK (kind IN ('credential', 'host', 'file', 'manifest'))`,
+	`
+CREATE TABLE {s}.passkeys (
+	credential_id bytea PRIMARY KEY,
+	user_id       uuid NOT NULL REFERENCES {s}.users (id) ON DELETE CASCADE,
+	public_key    bytea NOT NULL,
+	aaguid        bytea NOT NULL,
+	sign_count    bigint NOT NULL DEFAULT 0,
+	backed_up     boolean NOT NULL DEFAULT false,
+	transports    text[] NOT NULL DEFAULT '{}',
+	label         text NOT NULL,
+	created_at    timestamptz NOT NULL DEFAULT now(),
+	last_used_at  timestamptz
+);
+CREATE INDEX passkeys_user_idx ON {s}.passkeys (user_id);
+`,
 }

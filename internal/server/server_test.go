@@ -66,7 +66,10 @@ func newTestServer(t *testing.T, opts ...func(*Config)) (*httptest.Server, strin
 	for _, o := range opts {
 		o(&cfg)
 	}
-	srv := New(st, cfg, static)
+	srv, err := New(st, cfg, static)
+	if err != nil {
+		t.Fatal(err)
+	}
 	ts := httptest.NewServer(srv.Handler())
 	t.Cleanup(ts.Close)
 	return ts, schema
@@ -463,8 +466,8 @@ func TestSchemaIsConfigurable(t *testing.T) {
 	var n int
 	_ = conn.QueryRow(context.Background(),
 		`SELECT count(*) FROM information_schema.tables WHERE table_schema = $1`, schema).Scan(&n)
-	if n != 7 {
-		t.Fatalf("expected 7 tables in %s, found %d", schema, n)
+	if n != 8 {
+		t.Fatalf("expected 8 tables in %s, found %d", schema, n)
 	}
 }
 

@@ -174,7 +174,7 @@ func run() error {
 	defer st.Close()
 	secret := k.Cookie()
 
-	srv := server.New(st, server.Config{
+	srv, err := server.New(st, server.Config{
 		Features:       features,
 		SecureCookies:  secureCookies,
 		TrustedProxies: trustedProxies,
@@ -185,7 +185,11 @@ func run() error {
 		Secret:         secret,
 		GatePassword:   os.Getenv("TUCK_GATE_PASSWORD"),
 		GateWord:       gateWord,
+		Origin:         strings.TrimSuffix(os.Getenv("TUCK_ORIGIN"), "/"),
 	}, web.Dist())
+	if err != nil {
+		return err
+	}
 	go srv.Janitor(ctx)
 
 	addr := env("TUCK_ADDR", ":8080")

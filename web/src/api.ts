@@ -66,6 +66,19 @@ export interface StoredItem {
   updatedAt: string;
 }
 
+export interface PasskeyRow {
+  id: string;
+  label: string;
+  added: string;
+  lastUsed: string | null;
+}
+
+export interface PasskeyList {
+  passkeys: PasskeyRow[];
+  enabled: boolean;
+  userId: string;
+}
+
 export const api = {
   status: () => request<Status>("GET", "/api/status"),
   gate: (typed: string) => request<{ open: boolean }>("POST", "/api/gate", { typed }),
@@ -81,6 +94,12 @@ export const api = {
   lock: () => request<void>("POST", "/api/lock"),
   rekey: (currentAuthKey: string, enrollment: Enrollment) =>
     request<void>("PUT", "/api/account/keys", { currentAuthKey, enrollment }),
+  passkeys: () => request<PasskeyList>("GET", "/api/passkeys"),
+  passkeyStart: () => request<Record<string, unknown>>("POST", "/api/passkeys/start"),
+  passkeyFinish: (label: string, credential: unknown) => request<PasskeyList>("POST", `/api/passkeys/finish?label=${encodeURIComponent(label)}`, credential),
+  passkeyForget: (id: string) => request<PasskeyList>("DELETE", `/api/passkeys/${id}`),
+  gatePasskeyStart: () => request<Record<string, unknown>>("POST", "/api/gate/passkey/start"),
+  gatePasskeyFinish: (credential: unknown) => request<{ open: boolean }>("POST", "/api/gate/passkey/finish", credential),
   items: () => request<{ items: StoredItem[] }>("GET", "/api/items"),
   putItem: (id: string, kind: StoredKind, nonce: string, ciphertext: string, replaces?: string) =>
     request<void>("PUT", `/api/items/${id}`, { kind, nonce, ciphertext, replaces }),

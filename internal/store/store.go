@@ -625,3 +625,74 @@ func (s *Store) File(ctx context.Context, userID, itemID string) ([]byte, error)
 	}
 	return blob, err
 }
+
+type Passkey struct {
+	CredentialID []byte
+	UserID       string
+	PublicKey    []byte
+	AAGUID       []byte
+	SignCount    uint32
+	BackedUp     bool
+	Transports   []string
+	Label        string
+	CreatedAt    time.Time
+	LastUsedAt   *time.Time
+}
+
+func (s *Store) AddPasskey(ctx context.Context, p Passkey) error {
+	_, err := s.pool.Exec(ctx, s.q(`
+		INSERT INTO {s}.passkeys (credential_id, user_id, public_key, aaguid, sign_count, backed_up, transports, label)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`),
+		p.CredentialID, p.UserID, p.PublicKey, p.AAGUID, int64(p.SignCount), p.BackedUp, p.Transports, p.Label)
+	return err
+}
+
+func (s *Store) Passkeys(ctx context.Context, userID string) ([]Passkey, error) {
+	rows, err := s.pool.Query(ctx, s.q(`
+		SELECT credential_id, user_id::text, public_key, aaguid, sign_count, backed_up, transports, label, created_at, last_used_at
+		FROM {s}.passkeys WHERE user_id = $1 ORDER BY created_at`), userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Passkey
+	for rows.Next() {
+		var p Passkey
+		var count int64
+		if err := rows.Scan(&p.CredentialID, &p.UserID, &p.PublicKey, &p.AAGUID, &count, &p.BackedUp, &p.Transports, &p.Label, &p.CreatedAt, &p.LastUsedAt); err != nil {
+			return nil, err
+		}
+		p.SignCount = uint32(count)
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+// The door has no account attached yet, so a passkey is looked up by its own id.
+func (s *Store) PasskeyByID(ctx context.Context, credentialID []byte) (*Passkey, error) {
+	p := &Passkey{}
+	var count int64
+	err := s.pool.QueryRow(ctx, s.q(`
+		SELECT credential_id, user_id::text, public_key, aaguid, sign_count, backed_up, transports, label, created_at, last_used_at
+		FROM {s}.passkeys WHERE credential_id = $1`), credentialID).
+		Scan(&p.CredentialID, &p.UserID, &p.PublicKey, &p.AAGUID, &count, &p.BackedUp, &p.Transports, &p.Label, &p.CreatedAt, &p.LastUsedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	p.SignCount = uint32(count)
+	return p, err
+}
+
+func (s *Store) PasskeyUsed(ctx context.Context, credentialID []byte, signCount uint32) error {
+	_, err := s.pool.Exec(ctx, s.q(`
+		UPDATE {s}.passkeys SET sign_count = $2, last_used_at = now() WHERE credential_id = $1`), credentialID, int64(signCount))
+	return err
+}
+
+func (s *Store) DeletePasskey(ctx context.Context, userID string, credentialID []byte) error {
+	tag, err := s.pool.Exec(ctx, s.q(`DELETE FROM {s}.passkeys WHERE user_id = $1 AND credential_id = $2`), userID, credentialID)
+	if err == nil && tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return err
+}

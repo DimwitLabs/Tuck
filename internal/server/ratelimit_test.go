@@ -47,3 +47,24 @@ func TestFullLimiterScansAtMostOncePerInterval(t *testing.T) {
 		t.Fatal("once the interval passes, stale keys make room again")
 	}
 }
+
+func TestSweepForgetsFinishedWindows(t *testing.T) {
+	l := newLimiter(1, 10*time.Millisecond)
+	if !l.allow("one") || !l.allow("two") {
+		t.Fatal("the first hit for each key should be allowed")
+	}
+	if l.allow("one") {
+		t.Fatal("the second hit inside the window should be refused")
+	}
+	time.Sleep(15 * time.Millisecond)
+	l.sweep()
+	l.mu.Lock()
+	left := len(l.hits)
+	l.mu.Unlock()
+	if left != 0 {
+		t.Fatalf("a swept limiter should remember nothing, still holds %d keys", left)
+	}
+	if !l.allow("one") {
+		t.Fatal("a key whose window passed should be allowed again")
+	}
+}

@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"net/http"
 	"strconv"
@@ -11,10 +12,12 @@ import (
 )
 
 const (
-	sessionCookie = "tuck_session"
-	gateCookie    = "tuck_gate"
-	deviceCookie  = "tuck_device"
-	deviceTTL     = 90 * 24 * time.Hour
+	sessionCookie     = "tuck_session"
+	gateCookie        = "tuck_gate"
+	deviceCookie      = "tuck_device"
+	registerCookie    = "tuck_pk_add"
+	gatePasskeyCookie = "tuck_pk_gate"
+	deviceTTL         = 90 * 24 * time.Hour
 )
 
 func (s *Server) cookieName(base string) string {
@@ -60,6 +63,34 @@ func (s *Server) verify(purpose, value string) bool {
 	}
 	given, err := hex.DecodeString(sig)
 	return err == nil && hmac.Equal(given, s.mac(purpose, expires))
+}
+
+// Carries a WebAuthn challenge back to us untampered, so a ceremony needs no server-side state.
+func (s *Server) sealed(purpose string, payload []byte, ttl time.Duration) string {
+	body := base64.RawURLEncoding.EncodeToString(payload)
+	expires := strconv.FormatInt(time.Now().Add(ttl).Unix(), 10)
+	return expires + "." + body + "." + hex.EncodeToString(s.mac(purpose+"|"+body, expires))
+}
+
+func (s *Server) unsealed(purpose, value string) ([]byte, bool) {
+	expires, rest, ok := strings.Cut(value, ".")
+	if !ok {
+		return nil, false
+	}
+	body, sig, ok := strings.Cut(rest, ".")
+	if !ok {
+		return nil, false
+	}
+	unix, err := strconv.ParseInt(expires, 10, 64)
+	if err != nil || time.Now().Unix() > unix {
+		return nil, false
+	}
+	given, err := hex.DecodeString(sig)
+	if err != nil || !hmac.Equal(given, s.mac(purpose+"|"+body, expires)) {
+		return nil, false
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(body)
+	return payload, err == nil
 }
 
 func (s *Server) mac(purpose, expires string) []byte {
