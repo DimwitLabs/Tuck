@@ -131,6 +131,7 @@ export function passkeyProblem(err: unknown): string | null {
   if (name === "SecurityError") return "this address doesn't match the one tuck is configured with.";
   if (name === "NotSupportedError") return "this device can't make the kind of passkey tuck asks for.";
   if (name === "ConstraintError") return "this device needs a screen lock before it can hold a passkey.";
-  if (name === "NotReadableError") return "this device's passkey service wouldn't answer. check its screen lock and password manager, then try again.";
-  return name ? `that device could not be enrolled (${name}).` : "that device could not be enrolled.";
+  const detail = err instanceof Error && err.message ? `: ${err.message}` : "";
+  if (name === "NotReadableError") return `this device's passkey service wouldn't answer${detail}`;
+  return name ? `that device could not be enrolled (${name}${detail}).` : "that device could not be enrolled.";
 }

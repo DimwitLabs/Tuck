@@ -175,13 +175,14 @@ describe("passkeyProblem", () => {
     expect(passkeyProblem(Object.assign(new Error(), { name: "SecurityError" }))).toMatch(/address/);
     expect(passkeyProblem(Object.assign(new Error(), { name: "NotSupportedError" }))).toMatch(/kind of passkey/);
     expect(passkeyProblem(Object.assign(new Error(), { name: "ConstraintError" }))).toMatch(/screen lock/);
-    expect(passkeyProblem(Object.assign(new Error(), { name: "NotReadableError" }))).toMatch(/passkey service/);
+    expect(passkeyProblem(Object.assign(new Error("talking to the credential manager"), { name: "NotReadableError" }))).toMatch(/passkey service wouldn't answer: talking to the credential manager/);
     expect(passkeyProblem(Object.assign(new Error(), { name: "NotSupportedError" }))).toMatch(/kind of passkey/);
     expect(passkeyProblem(Object.assign(new Error(), { name: "ConstraintError" }))).toMatch(/screen lock/);
   });
 
   it("names the ones it has no words for, so a report says something", () => {
     expect(passkeyProblem(Object.assign(new Error(), { name: "UnknownError" }))).toMatch(/could not be enrolled \(UnknownError\)/);
+    expect(passkeyProblem(Object.assign(new Error("the sensor fell off"), { name: "UnknownError" }))).toMatch(/\(UnknownError: the sensor fell off\)/);
     expect(passkeyProblem("not an error")).toBe("that device could not be enrolled.");
   });
 

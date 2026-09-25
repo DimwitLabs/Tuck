@@ -146,18 +146,15 @@ func (s *Server) beginPasskey(w http.ResponseWriter, r *http.Request) error {
 		webauthn.WithExclusions(exclude),
 		webauthn.WithPublicKeyCredentialHints(thisDevice),
 		webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{
-			RequireResidentKey: protocol.ResidentKeyRequired(),
-			ResidentKey:        protocol.ResidentKeyRequirementRequired,
-			UserVerification:   protocol.VerificationRequired,
+			AuthenticatorAttachment: protocol.Platform,
+			RequireResidentKey:      protocol.ResidentKeyRequired(),
+			ResidentKey:             protocol.ResidentKeyRequirementRequired,
+			UserVerification:        protocol.VerificationRequired,
 		}),
 	)
 	if err != nil {
 		return err
 	}
-	// The hint asks for this device without binding it. go-webauthn turns the
-	// hint into a platform attachment, which sends android straight past
-	// whichever passkey provider the phone actually uses.
-	creation.Response.AuthenticatorSelection.AuthenticatorAttachment = ""
 	if err := s.keepCeremony(w, registerCookie, session); err != nil {
 		return err
 	}

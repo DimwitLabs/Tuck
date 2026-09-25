@@ -206,11 +206,8 @@ func TestPasskeyRegistrationOptionsAskForThisDevice(t *testing.T) {
 		t.Fatalf("hints %v, want [client-device] so the browser offers its own sensor", b["hints"])
 	}
 	sel, _ := b["authenticatorSelection"].(map[string]any)
-	if sel["residentKey"] != "required" || sel["userVerification"] != "required" {
+	if sel["authenticatorAttachment"] != "platform" || sel["residentKey"] != "required" || sel["userVerification"] != "required" {
 		t.Fatalf("authenticator selection %v", sel)
-	}
-	if sel["authenticatorAttachment"] != nil {
-		t.Fatalf("pinning the attachment cuts out the phone's own passkey provider: %v", sel)
 	}
 }
 
