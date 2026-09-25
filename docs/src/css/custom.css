@@ -538,3 +538,22 @@ div[class*="codeBlockContainer"] {
   color: var(--muted);
   font-style: normal;
 }
+
+/* The site reads lowercase, but the source is written in proper case so
+   search results, screen readers and copied text get real sentences. */
+body {
+  text-transform: lowercase;
+}
+
+code,
+pre,
+kbd,
+samp {
+  text-transform: none;
+}
+
+/* Form controls do not inherit text-transform from the UA stylesheet.
+   Inputs stay untouched so what someone types is shown as typed. */
+button {
+  text-transform: inherit;
+}

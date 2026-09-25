@@ -1,13 +1,13 @@
 ---
-title: the reverse proxy
+title: The reverse proxy
 description: Put Tuck behind nginx with TLS from certbot.
 ---
 
-# the reverse proxy
+# The reverse proxy
 
-tuck only talks https, through a proxy you trust. here's nginx with certbot.
+Tuck only talks HTTPS, through a proxy you trust. Here's nginx with certbot.
 
-1. save this as `/etc/nginx/sites-available/tuck.conf`, with your domain:
+1. Save this as `/etc/nginx/sites-available/tuck.conf`, with your domain:
 
    ```nginx
    server {
@@ -28,7 +28,7 @@ tuck only talks https, through a proxy you trust. here's nginx with certbot.
    }
    ```
 
-2. turn it on and add https:
+2. Turn it on and add HTTPS:
 
    ```bash
    sudo ln -s /etc/nginx/sites-available/tuck.conf /etc/nginx/sites-enabled/
@@ -36,16 +36,16 @@ tuck only talks https, through a proxy you trust. here's nginx with certbot.
    sudo certbot --nginx -d tuck.example.com
    ```
 
-   say yes when certbot offers to redirect to https.
+   Say yes when certbot offers to redirect to HTTPS.
 
-3. tell tuck to trust the proxy, in `.env`:
+3. Tell Tuck to trust the proxy, in `.env`:
 
    ```ini
    TUCK_TRUSTED_PROXIES=172.16.0.0/12
    ```
 
-   then `docker compose up -d` again.
+   Then `docker compose up -d` again.
 
-:::tip still says "https only"?
-run `docker compose logs tuck | grep audit` to see the address requests come from, and put that in `TUCK_TRUSTED_PROXIES`.
+:::tip still says "HTTPS only"?
+Run `docker compose logs tuck | grep audit` to see the address requests come from, and put that in `TUCK_TRUSTED_PROXIES`.
 :::

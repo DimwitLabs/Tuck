@@ -1,26 +1,26 @@
 ---
-title: first login
+title: First login
 description: Sign up, write your three questions and open the vault for the first time.
 ---
 
-# first login
+# First login
 
 :::warning sign up first
-each tuck has one account, and sign-up closes after it. do it before you share the address.
+Each Tuck has one account, and sign-up closes after it. Do it before you share the address.
 :::
 
-1. open tuck and pick a username and password.
-2. write three questions, and answer them.
-3. that's your vault.
+1. Open Tuck and pick a username and password.
+2. Write three questions, and answer them.
+3. That's your vault.
 
-## picking good answers
+## Picking good answers
 
-- **make them unguessable:** nothing from social media or a public record.
-- case and extra spaces don't matter. spelling and punctuation do.
-- write them down somewhere safe. there's no recovery.
+- **Make them unguessable:** nothing from social media or a public record.
+- Case and extra spaces don't matter. Spelling and punctuation do.
+- Write them down somewhere safe. There's no recovery.
 
-## what to expect
+## What to expect
 
-- the vault locks after two quiet minutes.
-- closing or reloading the tab logs you out.
-- copied secrets clear from your clipboard after 30 seconds.
+- The vault locks after two quiet minutes.
+- Closing or reloading the tab logs you out.
+- Copied secrets clear from your clipboard after 30 seconds.

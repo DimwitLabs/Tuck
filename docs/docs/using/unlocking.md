@@ -1,45 +1,45 @@
 ---
-title: unlocking
+title: Unlocking
 description: The password, the three questions, and what happens after wrong answers.
 ---
 
-# unlocking
+# Unlocking
 
-every visit is the same: your password, then your three questions, one at a time.
+Every visit is the same: your password, then your three questions, one at a time.
 
-## wrong answers
+## Wrong answers
 
-every fifth wrong answer pauses unlocking, twice as long each time:
+Every fifth wrong answer pauses unlocking, twice as long each time:
 
-| wrong answers | pause |
+| Wrong answers | Pause |
 |---|---|
 | 5 | 15 minutes |
 | 10 | 30 minutes |
 | 15 | 1 hour |
 | 20, 25, 30 | 2, 4, 8 hours |
-| 35 | frozen |
+| 35 | Frozen |
 
-- during a pause, even the right answer is refused.
-- a full unlock resets the count.
+- During a pause, even the right answer is refused.
+- A full unlock resets the count.
 - `TUCK_FREEZE_AFTER` changes how many pauses come before the freeze.
 
-nobody can do this to you from outside: answering questions needs a session, so an attacker would already need your password to spend a single wrong answer.
+Nobody can do this to you from outside: answering questions needs a session, so an attacker would already need your password to spend a single wrong answer.
 
-## frozen?
+## Frozen?
 
-whoever runs the instance can lift it:
+Whoever runs the instance can lift it:
 
 ```bash
 docker compose exec tuck /tuck unfreeze <username>
 ```
 
-or straight in the database:
+Or straight in the database:
 
 ```sql
 UPDATE tuck.users
 SET unlock_frozen = false, failed_unlocks = 0, unlock_lockouts = 0, unlock_locked_until = NULL;
 ```
 
-## changing your password or questions
+## Changing your password or questions
 
-go to settings. you'll need your current password.
+Go to settings. You'll need your current password.

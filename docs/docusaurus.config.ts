@@ -19,10 +19,10 @@ function releasedVersion() {
   }
 }
 
-const TAGLINE = "all your secrets, tucked in.";
+const TAGLINE = "All your secrets, tucked in.";
 
 const config: Config = {
-  title: "tuck",
+  title: "Tuck",
   tagline: TAGLINE,
   favicon: "img/favicon.svg",
 
@@ -99,14 +99,14 @@ const config: Config = {
     ],
     colorMode: { defaultMode: "light", disableSwitch: false, respectPrefersColorScheme: true },
     navbar: {
-      title: "tuck",
+      title: "Tuck",
       logo: { alt: "", src: "img/logo.svg", srcDark: "img/logo-dark.svg", href: SITE, target: "_self", height: 30, width: 30 },
       items: [
-        { to: "/", label: "docs", position: "left", activeBaseRegex: "^/$" },
-        { to: "/getting-started/run-it", label: "run it", position: "left" },
-        { to: "/reference/configuration", label: "reference", position: "left", activeBasePath: "/reference" },
+        { to: "/", label: "Docs", position: "left", activeBaseRegex: "^/$" },
+        { to: "/getting-started/run-it", label: "Run it", position: "left" },
+        { to: "/reference/configuration", label: "Reference", position: "left", activeBasePath: "/reference" },
         { type: "search", position: "right" },
-        { href: REPO, label: "github", position: "right" },
+        { href: REPO, label: "GitHub", position: "right" },
         { type: "custom-versionPill", position: "right" },
       ],
     },
@@ -114,27 +114,28 @@ const config: Config = {
       style: "light",
       links: [
         {
-          title: "start",
+          title: "Start",
           items: [
-            { label: "what tuck is", to: "/" },
-            { label: "run it", to: "/getting-started/run-it" },
-            { label: "first login", to: "/getting-started/first-login" },
+            { label: "What Tuck is", to: "/" },
+            { label: "Run it", to: "/getting-started/run-it" },
+            { label: "First login", to: "/getting-started/first-login" },
           ],
         },
         {
-          title: "reference",
+          title: "Reference",
           items: [
-            { label: "configuration", to: "/reference/configuration" },
-            { label: "how it's encrypted", to: "/reference/how-it-is-encrypted" },
-            { label: "what it protects against", to: "/reference/threat-model" },
+            { label: "Configuration", to: "/reference/configuration" },
+            { label: "Security", to: "/reference/security" },
+            { label: "How it's encrypted", to: "/reference/how-it-is-encrypted" },
+            { label: "What it protects against", to: "/reference/threat-model" },
           ],
         },
         {
-          title: "project",
+          title: "Project",
           items: [
-            { label: "github", href: REPO },
-            { label: "changelog", href: `${REPO}/blob/main/CHANGELOG.md` },
-            { label: "report a vulnerability", href: `${REPO}/security/advisories/new` },
+            { label: "GitHub", href: REPO },
+            { label: "Changelog", href: `${REPO}/blob/main/CHANGELOG.md` },
+            { label: "Report a vulnerability", href: `${REPO}/security/advisories/new` },
           ],
         },
       ],

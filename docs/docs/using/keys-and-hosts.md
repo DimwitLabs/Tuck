@@ -1,23 +1,23 @@
 ---
-title: keys and hosts
+title: Keys and hosts
 description: Generate or import SSH keys, and describe the hosts they open.
 ---
 
-# keys and hosts
+# Keys and hosts
 
-## keys
+## Keys
 
-- **generate** ed25519 or rsa keys right in your browser.
-- **or paste** a key you already have: openssh, pkcs#1 or pkcs#8.
-- give a key a username and hosts using it log in as that user.
+- **Generate** ed25519 or RSA keys right in your browser.
+- **Or paste** a key you already have: openssh, pkcs#1 or pkcs#8.
+- Give a key a username and hosts using it log in as that user.
 
-## hosts
+## Hosts
 
-a host is a line in `ssh_config` with a friendly face: a name, some aliases, the hostname, port, user, key and an optional jump host.
+A host is a line in `ssh_config` with a friendly face: a name, some aliases, the hostname, port, user, key and an optional jump host.
 
-- aliases can't have dots, so nothing can pose as `github.com`.
-- search finds names, aliases, hostnames and tags.
+- Aliases can't have dots, so nothing can pose as `github.com`.
+- Search finds names, aliases, hostnames and tags.
 
-## files
+## Files
 
-anything up to 25 mb, encrypted like everything else. tuck checks each file before it opens it, so a swapped file is refused.
+Anything up to 25 mb, encrypted like everything else. Tuck checks each file before it opens it, so a swapped file is refused.

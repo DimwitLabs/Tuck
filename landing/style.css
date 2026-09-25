@@ -718,3 +718,22 @@ figcaption {
   font-size: clamp(2.4rem, 7vw, 4rem);
   letter-spacing: -0.03em;
 }
+
+/* The page reads lowercase; the markup keeps proper case for search
+   results, screen readers and anyone copying the text. */
+body {
+  text-transform: lowercase;
+}
+
+code,
+pre,
+kbd,
+samp {
+  text-transform: none;
+}
+
+/* Form controls do not inherit text-transform from the UA stylesheet.
+   Inputs stay untouched so what someone types is shown as typed. */
+button {
+  text-transform: inherit;
+}
