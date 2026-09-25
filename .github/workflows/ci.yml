@@ -72,6 +72,18 @@ jobs:
           }'
         env:
           COVERAGE_FLOOR: 85
+      - name: Check Version Pill
+        run: |
+          changelog=$(grep -o '^## \[[0-9]*\.[0-9]*\.[0-9]*\]' CHANGELOG.md | head -1 | tr -d '#[] ')
+          link=$(grep -o 'releases/tag/v[0-9.]*' landing/index.html | head -1 | sed 's|releases/tag/v||')
+          text=$(grep -o '>v[0-9.]*<' landing/index.html | head -1 | tr -d '><v')
+          for found in "$link" "$text"; do
+            if [ "$found" != "$changelog" ]; then
+              echo "the landing pill says $found but the changelog says $changelog"
+              exit 1
+            fi
+          done
+          echo "the landing pill matches the changelog at $changelog"
 
   image:
     name: Image
