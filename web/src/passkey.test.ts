@@ -134,7 +134,7 @@ describe("canEnrol", () => {
 });
 
 describe("createPasskey", () => {
-  const options = { challenge: new Uint8Array(4), excludeCredentials: [{ id: new Uint8Array(2), type: "public-key" }], hints: ["client-device"] } as unknown as PublicKeyCredentialCreationOptions;
+  const options = { challenge: new Uint8Array(4), excludeCredentials: [{ id: new Uint8Array(2), type: "public-key" }], hints: ["client-device"], authenticatorSelection: { authenticatorAttachment: "platform", residentKey: "required" } } as unknown as PublicKeyCredentialCreationOptions;
   const refuse = (name: string) => () => Promise.reject(new DOMException("no", name));
 
   it("asks once when the device answers", async () => {
@@ -151,6 +151,8 @@ describe("createPasskey", () => {
     const second = create.mock.calls[1][0].publicKey;
     expect(second.excludeCredentials).toBeUndefined();
     expect(second.hints).toBeUndefined();
+    expect(second.authenticatorSelection.authenticatorAttachment).toBeUndefined();
+    expect(second.authenticatorSelection.residentKey).toBe("required");
     expect(second.challenge).toBe(options.challenge);
   });
 

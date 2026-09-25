@@ -116,6 +116,9 @@ export async function createPasskey(options: PublicKeyCredentialCreationOptions)
     const plainer: Record<string, unknown> = { ...options };
     delete plainer.excludeCredentials;
     delete plainer.hints;
+    const selection = { ...(plainer.authenticatorSelection as Record<string, unknown>) };
+    delete selection.authenticatorAttachment;
+    plainer.authenticatorSelection = selection;
     return (await navigator.credentials.create({ publicKey: plainer as unknown as PublicKeyCredentialCreationOptions })) as PublicKeyCredential | null;
   }
 }
