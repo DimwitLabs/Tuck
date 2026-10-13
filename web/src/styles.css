@@ -1215,7 +1215,8 @@ textarea.mono {
 
 @media (prefers-reduced-motion: reduce) {
   *,
-  *::before {
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
   }
