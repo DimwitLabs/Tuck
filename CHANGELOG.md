@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-13
+
+### Fixed
+
+- **Editor Sheets Behave Like Real Windows:** They are native dialogs now, so Escape and the Android back gesture close them, focus returns to whatever opened them, and nothing behind them can be reached by Tab. A click in the margin beside the card no longer risks a half-filled form.
+- **The Door Stops Selecting Itself:** Pressing and holding to be asked for a passkey no longer starts a text selection on touch.
+- **Reduced Motion Is Honoured Everywhere:** The setting now also stops animations on `::after`.
+
+### Changed
+
+- **A Smaller Image:** Only the latin font subsets ship, which cuts sixty build assets to sixteen. Nothing looks different.
+
 ## [1.0.0] - 2026-09-26
 
 ### Added

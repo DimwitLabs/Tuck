@@ -42,10 +42,10 @@ docker compose pull && docker compose up -d
 Set `TUCK_VERSION` in `.env`:
 
 - `1` gets fixes, never breaking changes.
-- `1.0.0` stays put.
+- `1.0.1` stays put.
 
 Images are for amd64 and arm64, and signed by the workflow that built them:
 
 ```bash
-gh attestation verify oci://ghcr.io/dimwitlabs/tuck:1.0.0 --owner DimwitLabs
+gh attestation verify oci://ghcr.io/dimwitlabs/tuck:1.0.1 --owner DimwitLabs
 ```
