@@ -55,28 +55,34 @@ export function CopyButton({ text, label = "copy", secret = false }: { text: str
 }
 
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const sheet = useRef<HTMLDialogElement>(null);
+  const leave = useRef(onClose);
+  leave.current = onClose;
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const dialog = sheet.current;
+    if (!dialog) return;
+    dialog.showModal();
+    const closed = () => leave.current();
+    dialog.addEventListener("close", closed);
     return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
+      dialog.removeEventListener("close", closed);
+      dialog.close();
     };
-  }, [onClose]);
+  }, []);
+
   return (
-    <div className="overlay">
-      <div className="editor" role="dialog" aria-modal aria-label={title}>
+    <dialog ref={sheet} className="overlay" closedby="any" aria-label={title}>
+      <div className="editor">
         <header className="section-head">
           <h2>{title}</h2>
-          <button type="button" className="act quiet" onClick={onClose}>
+          <button type="button" className="act quiet" onClick={() => sheet.current?.close()}>
             close
           </button>
         </header>
         {children}
       </div>
-    </div>
+    </dialog>
   );
 }
 

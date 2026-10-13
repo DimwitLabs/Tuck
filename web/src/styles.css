@@ -1098,10 +1098,25 @@ textarea.mono {
   position: fixed;
   inset: 0;
   z-index: 10;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  color: inherit;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 2.5rem 16px 4rem;
   background: var(--ground);
   animation: fade 0.2s ease-out;
+}
+
+/* ::backdrop only honours overscroll-behavior once it is a scroll container. */
+.overlay::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: var(--ground);
 }
 
 .overlay .editor {
