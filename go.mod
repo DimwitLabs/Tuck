@@ -3,7 +3,7 @@ module github.com/DimwitLabs/tuck
 go 1.26.9
 
 require (
-	github.com/fxamacker/cbor/v2 v2.9.4
+	github.com/fxamacker/cbor/v2 v2.9.6
 	github.com/go-webauthn/webauthn v0.18.2
 	github.com/jackc/pgx/v5 v5.11.0
 )
